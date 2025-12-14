@@ -209,6 +209,10 @@ const searchSimilarProductsByImage = async (req, res, next) => {
     limit: 20
   }, req.nearbyWarehouse, false)
 
+  // store in cache
+  if(products.length > 0 && req.redisCacheKey)
+    await storeCachedData(req.redisCacheKey,{ ttl: 600, data: products }, 'product')
+
   sendApiResponse(res, 200, {
     message: products.length === 0 ? "We couldn't find what you are looking for." : undefined,
     data: products,

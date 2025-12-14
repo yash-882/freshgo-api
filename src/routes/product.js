@@ -42,6 +42,8 @@ productRouter.post('/image-search',
     }).single('image'),
     
     validateImageInput, // validates req.file (if parsed) or URL
+
+    checkCachedData('product', false),
     searchSimilarProductsByImage
 )
 

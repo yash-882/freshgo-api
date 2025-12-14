@@ -5,28 +5,41 @@ const cacheKeyBuilders = require("../constants/cacheKeyBuilders.js");
 // middleware to get cached products (stored in Redis)
 // resourceType can be a product/cart/user/order, etc
 const checkCachedData = (resourceType,  isPvtResource=false) => {
+  // query or document ID is used for a uniqueID as a part of Redis key
   return async (req, res, next) => {
-    // query or document ID is used for a uniqueID as a part of Redis key
-    let queryOrID;
+
+
+    function getImageInput() {
+      if (req.imageData)
+        // buffer or image(URL)
+        return req.imageData.image?.buffer || req.imageData.image
+  }
+
+    // get a source for generating hash-key by query/params or image input
     
+    let hash;
+    let cacheKeySource = req.sanitizedQuery || req.params.id || getImageInput()
 
     if(isPvtResource){
-      queryOrID = cacheKeyBuilders
-     .pvtResources(req.user._id, req.sanitizedQuery || req.params.id)
+
+      hash = cacheKeyBuilders
+     .pvtResources(req.user._id, cacheKeySource)
     } 
     else{
-      queryOrID = cacheKeyBuilders
-      .publicResources(req.sanitizedQuery || req.params.id || req.originalUrl)
+      hash = cacheKeyBuilders
+      .publicResources(cacheKeySource)
     }
 
-    if (!queryOrID) return next(); // nothing to build cache from
+    if (!hash){
+       return next(); // nothing to build cache from
+    }
 
-    const cachedData = await getCachedData(queryOrID, resourceType)
+    const cachedData = await getCachedData(hash, resourceType)
 
 
     if (!cachedData) {
 
-      req.redisCacheKey = queryOrID; //cache key
+      req.redisCacheKey = hash; //cache key
       return next();
 
     }
