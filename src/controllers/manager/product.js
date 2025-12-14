@@ -148,7 +148,7 @@ const addProductsToMyWarehouse = async (req, res, next) => {
     await session.withTransaction(async () => {
 
       // Add warehouses (MongoDB internally runs separate updates)
-      updatedProducts = await ProductModel.bulkWrite(bulkUpdate, { throwOnValidationError: true });
+      updatedProducts = await ProductModel.bulkWrite(bulkUpdate, { throwOnValidationError: true, session });
     });
   } catch (error) {
     next(error);
