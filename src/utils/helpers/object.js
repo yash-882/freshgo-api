@@ -11,7 +11,11 @@ const sortObjectKeys = (filter) => {
 }
 
 // checks if the given value is a plain object (not an array or null)
-const isPlainObject = (obj) => 
-    typeof obj === 'object' && obj !== null && !Array.isArray(obj);
-
+const isPlainObject = (obj) => {
+    if (typeof obj !== 'object' || obj === null) return false;
+  
+  const proto = Object.getPrototypeOf(obj);
+  return proto === null || proto === Object.prototype;
+  
+}
 module.exports = { sortObjectKeys, isPlainObject };

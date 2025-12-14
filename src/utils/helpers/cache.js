@@ -5,16 +5,7 @@ const { createHash } = require("crypto");
 // build a unique cache identifier for queries (e.g: sort=price&price[gt]=50)
 // takes query as an object 
 const generateQueryHash = (query = {}) => { 
-  
-  // directly hash and return (buffer can represent an image or any file)
-  if (Buffer.isBuffer(query)) {
-    return createHash('sha256')
-    .update(query)
-    .digest('hex')
-    .slice(0, 32)
-  }
 
-  // At this point it should be a query object
   const filter = { 
     ...query.filter || {}
   }
@@ -40,11 +31,19 @@ const resolveCacheID = (cacheKeySource) => {
 
   let hash;
   if(cacheKeySource){
-    if (isPlainObject(cacheKeySource) && Object.keys(cacheKeySource).length > 0)
+    if (isPlainObject(cacheKeySource))
       hash = generateQueryHash(cacheKeySource);
 
-    else
-      hash = cacheKeySource;
+
+    else if (Buffer.isBuffer(cacheKeySource)) 
+    return createHash('sha256')
+    .update(cacheKeySource)
+    .digest('hex')
+    .slice(0, 32)
+
+    else 
+      hash = cacheKeySource
+
 }
 
   return String(hash || "unknown");
