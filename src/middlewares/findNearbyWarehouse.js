@@ -55,7 +55,7 @@ const findNearbyWarehouse = async (req, res, next) => {
     if (coordsInvalid) {
         // use existing cookie containing warehouse info
         if (req.cookies.default_w_info) {
-            if (verifyJWT(req.cookies.default_w_info, 'default_w_info'));
+            if (verifyJWT(req.cookies.default_w_info, 'default_w_info'))
             return next()
         }
 
@@ -74,7 +74,7 @@ const findNearbyWarehouse = async (req, res, next) => {
 
     //  Use existing cookie containing nearby warehouse info
     if (req.cookies.nearby_w_info) {
-        if (verifyJWT(req.cookies.nearby_w_info, 'nearby_w_info'));
+        if (verifyJWT(req.cookies.nearby_w_info, 'nearby_w_info'))
         return next();
     }
 
