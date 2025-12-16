@@ -38,11 +38,13 @@ app.use(setCors())
 // parses query strings ("?price[gt]=20&sort=-price" -> {price: {gt: "20"}, sort="-price"})
 app.set("query parser", query => qs.parse(query))
 
-// parse JSON data
-app.use(express.json())
+
+app.use(express.json()) // parse JSON data
+
+app.use(express.urlencoded({ extended: true })) // parse Form data
 
 const rateLimit = require('express-rate-limit');
-const { login } = require('./controllers/auth.js');
+
 
 // rate limiter
 app.use(rateLimit({
