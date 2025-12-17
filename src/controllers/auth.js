@@ -8,7 +8,6 @@ const {
     generateOTP, 
     verifyOTP, 
     trackOTPLimit } = require("../utils/helpers/auth.js");
-const client = require("../configs/redisClient.js");
 const sendEmail = require("../utils/mailjet.js");
 const RedisService = require("../utils/classes/redisService.js");
 const mongoose = require("mongoose");
@@ -24,28 +23,31 @@ const { promisify } = require("util");
 const signUp = async (req, res, next) => {
     const {email, OTP: enteredOTP} = req.body
 
+    if(await findUserByQuery({email}, false))
+        return next(new CustomError('ConflictError', 'Email is already taken!', 409));
+
     // a unique key is generated with the combination of 'purpose' and 'email' for Redis)
     const otpStore = new RedisService(email, 'SIGN_UP_OTP')
     
     // key stored in Redis 
-    const OTP_KEY = otpStore.getKey();
+    const userOTPKey = otpStore.getKey();
 
-
-    //returns the updated OTP data (or initializes it for the first request))
-    //throws custom error if the request limit is exceeded or data is not found
-
+    //throws error if the request limit is exceeded or data is not found
     const OTPData = await trackOTPLimit({
-        OTP_KEY,
+        OTPKey: userOTPKey,
         countType: 'attemptCount',
         limit: 5,
         errMessage: 'OTP attempts limit reached, try again later'
     })
-    
+
     // update OTPData (updated attempts, continuing ttl)
-    await otpStore.setShortLivedData(OTPData.user, OTPData.ttl)
+    await otpStore.setShortLivedData({
+        ...OTPData.user,
+        attemptCount: OTPData.user?.attemptCount + 1 //updated attempts
+    }, OTPData.ttl, true)
     
     // verifies OTP and returns verified user, throws error for expiration and wrong attempts
-    const verifiedUser = await verifyOTP(OTP_KEY, enteredOTP)
+    const verifiedUser = await verifyOTP(userOTPKey, enteredOTP)
     
     
     // OTP was correct, create user
@@ -55,7 +57,8 @@ const signUp = async (req, res, next) => {
     await newUser.save() 
     
     // clear temporary user from redis
-    client.del(verifiedUser.email)
+    await otpStore.deleteData(userOTPKey)
+
     
 // tokens properties AT = Access Token, RT = Refresh Token
     const tokens = {
@@ -127,21 +130,21 @@ const validateForSignUp = async (req, res, next) => {
     const otpStore = new RedisService(body.email, 'SIGN_UP_OTP')
     
     // OTP key
-    const OTP_KEY = otpStore.getKey();
+    const userOTPKey = otpStore.getKey();
 
-    //returns the updated OTP data (or initializes it for the first request))
     //throws custom error if the request limit is exceeded
     const OTPData = await trackOTPLimit({
-        OTP_KEY, //key stored in Redis
-        countType: 'reqCount', //limit for requests
-        limit: 7, //only 7 requests can be made for OTP request
-        errMessage: 'OTP requests limit reached, try again later' //err message (if occurs)
+        OTPKey: userOTPKey, //key stored in Redis
+        countType: 'reqCount',
+        limit: 7,
+        errMessage: 'OTP requests limit reached, try again later'
     })
 
     // create a new mongoose document (not saved)
     const newUser = new UserModel({
         ...body, 
-        roles: ['user'] //force role to 'user'
+        roles: ['user'], //force role to 'user'
+        auth: ['local']
     })
 
     // validate user fields, throws error if any field is invalid
@@ -154,14 +157,18 @@ const validateForSignUp = async (req, res, next) => {
     // sending user an OTP via email
     await sendEmail(body.email, 'Verification for sign up', `Verification code: ${OTP}`)
 
+    const isFirstReq = OTPData.user.reqCount === 0;
+
     // temporarily (ttl example: 300 -> 5 minutes) store the user in Redis for OTP data for verification 
     await otpStore.setShortLivedData({
         name: body.name,
         email: body.email,
         password: body.password,
+        auth: ['local'],
         OTP: hashedOTP,
-        reqCount: OTPData.user.reqCount // request count
-    }, 300)
+        reqCount: ++OTPData.user.reqCount, // update request count
+        attemptCount: 0,
+    }, 300, !isFirstReq)
 
     // OTP successfully sent
     sendApiResponse(res, 201, {
@@ -316,26 +323,30 @@ const resetPassword = async (req, res, next) => {
     // a unique key is generated with the combination of 'purpose' and 'email' for Redis
     const otpStore = new RedisService(email, 'RESET_PASSWORD_OTP')
     // OTP key
-    const OTP_KEY = otpStore.getKey()
+    const userOTPKey = otpStore.getKey()
 
-    //returns the updated OTP data (or initializes it for the first request))
     //throws custom error if the request limit is exceeded
     const OTPData = await trackOTPLimit({
-        OTP_KEY, //key stored in Redis
+        OTPKey: userOTPKey, //key stored in Redis
         countType: 'reqCount', //limit for requests
         limit: 7, //only 7 requests can be made for OTP request
         errMessage: 'OTP requests limit reached, try again later' //err message (if occurs)
     })
-    
+
     // sending user an OTP via email
     await sendEmail(email, 'Reset password', `Use this code to reset password: ${OTP}`)
+
+    let reqCount = OTPData.user.reqCount || 0;
+    const isFirstReq = reqCount === 0;
     
     //temporarily (ttl example: 300 -> 5 minutes) store the user in Redis for OTP data for verification 
     await otpStore.setShortLivedData({
         email,
         OTP: hashedOTP,
-        reqCount: OTPData.user.reqCount // request count
-    }, 300)
+        reqCount: ++reqCount, // update request count
+        attemptCount: 0,
+    }, 300, !isFirstReq)
+    
 
     // OTP successfully sent
 sendApiResponse(res, 201, {
@@ -352,29 +363,28 @@ const verifyPasswordResetOTP = async (req, res, next) => {
 
     // a unique key is generated with the combination of 'purpose' and 'email' for Redis
     const otpStore = new RedisService(email, 'RESET_PASSWORD_OTP')
-    const OTP_KEY = otpStore.getKey()
-    
-    //returns the updated OTP data (or initializes it for the first request))
+    const userOTPKey = otpStore.getKey()    
+
     //throws custom error if the request limit is exceeded or data is not found
     const OTPData = await trackOTPLimit({
-        OTP_KEY, //key stored in Redis
-        countType: 'attemptCount', //limit for requests
-        limit: 5, //only 5 requests can be made for OTP request
-        errMessage: 'OTP attempts limit reached, try again later' //err message (if occurs)
+        OTPKey: userOTPKey, //key stored in Redis
+        countType: 'attemptCount',
+        limit: 5, 
+        errMessage: 'OTP attempts limit reached, try again later'
     })
-    
+
     //update attempts...
     await otpStore.setShortLivedData({
         ...OTPData.user, 
-        attemptCount: OTPData.user.attemptCount //updated attempts
-    }, 300)
+        attemptCount: OTPData.user.attemptCount + 1 //updated attempts
+    }, OTPData.ttl, true)
     
 
     //verifies OTP and returns verified user, throws error for expiration and wrong attempts
-    await verifyOTP(OTP_KEY, enteredOTP)
+    await verifyOTP(userOTPKey, enteredOTP)
 
     // OTP was correct delete the user from Redis
-    await otpStore.deleteData(OTP_KEY)
+    await otpStore.deleteData(userOTPKey)
     
     // a unique key is generated with the combination of 'purpose' and 'email' for Redis
     const tokenStore = new RedisService(email, 'RESET_PASSWORD_TOKEN')
@@ -489,27 +499,29 @@ const requestEmailChange = async (req, res, next) => {
     await new UserModel({email: newEmail}).validate(['email'])
 
     const otpStore = new RedisService(user.email, "EMAIL_CHANGE_OTP");
-    const OTP_KEY = otpStore.getKey()
+    const userOTPKey = otpStore.getKey()
 
-        //returns the updated OTP data (or initializes it for the first request))
-    //throws custom error if the request limit is exceeded
+    //throws error if the request limit is exceeded
     const OTPData = await trackOTPLimit({
-        OTP_KEY, //key stored in Redis
-        countType: 'reqCount', //limit for requests
-        limit: 7, //only 7 requests can be made for OTP request
-        errMessage: 'OTP requests limit reached, try again later' //err message (if occurs)
+        OTPKey: userOTPKey, //key stored in Redis
+        countType: 'reqCount',
+        limit: 7,
+        errMessage: 'OTP requests limit reached, try again later' 
     })
 
     // Create Redis key
     const OTP = generateOTP(6) // 6 digit OTP
     const hashedOTP = await bcrypt.hash(OTP, 10)
 
+    const isFirstReq = OTPData.user.reqCount === 0;
+
     // Store OTP, userID and newEmail
     await otpStore.setShortLivedData({ 
         OTP: hashedOTP, 
         newEmail, 
-        reqCount: OTPData.user.reqCount //updated count
-    }, 300); // 5 min TTL
+        reqCount: ++OTPData.user.reqCount, //updated count
+        attemptCount: 0,
+    }, 300, !isFirstReq); // 5 min TTL
 
     // Send OTP to new email
     await sendEmail(newEmail, 'Change email', `Use this OTP to change email: ${OTP}`);
@@ -530,27 +542,27 @@ const changeEmailWithOTP = async (req, res, next) => {
 
     // a unique key is generated with the combination of 'purpose' and 'email' for Redis
     const otpStore = new RedisService(user.email, 'EMAIL_CHANGE_OTP')
-    const OTP_KEY = otpStore.getKey()
+    const userOTPKey = otpStore.getKey()
 
     
-    //returns the updated OTP data (or initializes it for the first request))
+
     //throws custom error if the request limit is exceeded or data is not found
     const OTPData = await trackOTPLimit({
-        OTP_KEY, //key stored in Redis
-        countType: 'attemptCount', //limit for requests
-        limit: 5, //only 5 requests can be made for OTP request
-        errMessage: 'OTP attempts limit reached, try again later' //err message (if occurs)
+        OTPKey: userOTPKey, //key stored in Redis
+        countType: 'attemptCount',
+        limit: 5,
+        errMessage: 'OTP attempts limit reached, try again later'
     })
     
     //update attempts...
     await otpStore.setShortLivedData({
         ...OTPData.user, 
-        attemptCount: OTPData.user.attemptCount //updated attempts
-    }, 300)
+        attemptCount: ++OTPData.user.attemptCount //update attempts
+    }, OTPData.ttl, true)
     
 
     //verifies OTP and returns verified user, throws error for expiration and wrong attempts
-    await verifyOTP(OTP_KEY, enteredOTP)
+    await verifyOTP(userOTPKey, enteredOTP)
 
     // OTP was correct, update the email
     user.email = OTPData.user.newEmail
@@ -562,7 +574,7 @@ const changeEmailWithOTP = async (req, res, next) => {
     await deleteCachedData(cacheKeyBuilders.pvtResources(user._id), 'profile')
 
     // delete OTPData from Redis
-    await otpStore.deleteData(OTP_KEY)
+    await otpStore.deleteData(userOTPKey)
 
     // email updated
     sendApiResponse(res, 201, {

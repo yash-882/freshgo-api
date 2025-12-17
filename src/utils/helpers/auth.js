@@ -47,10 +47,10 @@ const generateOTP = (digits = 4) => {
     return OTP.padStart(digits, "0")
 }
 // verifies OTP (OTP stored in Redis)
-const verifyOTP = async (OTP_KEY, enteredOTP) => {
+const verifyOTP = async (OTPKey, enteredOTP) => {
 
     // user (json object)
-    const jsonUser = await client.get(OTP_KEY)
+    const jsonUser = await client.get(OTPKey)
 
     // if user not found
     if(!jsonUser){
@@ -70,42 +70,41 @@ const verifyOTP = async (OTP_KEY, enteredOTP) => {
     return parsedUser;
 }
 
-// validates OTP requests, attempts and update update the
-const trackOTPLimit = async ({ OTP_KEY, countType='reqCount', limit=5, errMessage }) => {
+// tracks attempts/request count , throws err if exceeded 
+const trackOTPLimit = async ({ OTPKey, countType='reqCount', limit=5, errMessage }) => {
     
-    const jsonData = await client.get(OTP_KEY)
-    
+    const jsonData = await client.get(OTPKey)
+
     // remaining expiration of the OTP
-    const ttl = await client.ttl(OTP_KEY)
+    const ttl = await client.ttl(OTPKey)
     
     // determines whether error should be thrown or not
     const isAttemptCheck = countType === 'attemptCount'
 
     //if the user associated with the OTP is not found
     if (!jsonData) {
-        //OTP action has not initiated yet, return 0 (count)
+        //OTP action has not initiated yet
         if(!isAttemptCheck) 
-            return {user: {reqCount: 1}, ttl: 300} // first request
+            return {user: {reqCount: 0, attemptCount: 0}, ttl: 300} // first request
 
         // throw error
-       throw new CustomError('NotFoundError', 'Expired OTP, please request a new one', 429)
+       throw new CustomError('NotFoundError', 'Expired OTP or session!', 429)
     }
 
      
     //user found, parsing JSON data to JS obj..
     const OTPData = JSON.parse(jsonData)
-    const currentCount = OTPData[countType] || 0
   
     // if reached maximum (5) OTP request limit
     if (OTPData[countType] >= limit) {
         throw new CustomError('TooManyRequestsError', errMessage, 429)
     } 
-    else {
-        OTPData[countType] = currentCount + 1 //update count 
-    }
 
     //return OTPData and ttl(remaining expiration time)
-    return {user: OTPData, ttl}
+    return {
+        user: OTPData, 
+        ttl
+    }
 }
 
 module.exports = { findUserByQuery, bcryptCompare, generateOTP, verifyOTP, trackOTPLimit }
