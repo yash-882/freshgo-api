@@ -200,7 +200,6 @@ const searchSimilarProductsByImage = async (req, res, next) => {
   
   // returns the product's subcategory (throws error for non-selling product image and NSFW image)
   const subcategory = await identifyProductAi(image, isURL)
-  
   // get products
   const products = await getProductsAgg({
     filter: {

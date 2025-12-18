@@ -1,7 +1,7 @@
 // handle uncaught exceptions
 process.on('uncaughtException', err => {
   console.error('Uncaught Exception! Shutting down...');
-  console.error(err.name, err.message);
+  console.error(err.name, err);
   process.exit(1);
 });
 

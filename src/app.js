@@ -24,6 +24,9 @@ const passport = require('passport');
 const cookieParser = require('cookie-parser');
 const qs = require('qs');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./configs/swagger');
 
 // configs
 const setCors = require('./configs/cors.js');
@@ -43,7 +46,6 @@ app.use(express.json()) // parse JSON data
 
 app.use(express.urlencoded({ extended: true })) // parse Form data
 
-const rateLimit = require('express-rate-limit');
 
 
 // rate limiter
@@ -57,24 +59,24 @@ app.use(rateLimit({
             429))
 }));
 
+
 // handle empty body for PUT, POST, PATCH requests
 app.use((req, res, next) => {
     const methodsWithBody = new Set(['POST', 'PUT', 'PATCH'])
-
-    if(methodsWithBody.has(req.method.toUpperCase()) && !req.body) 
+    
+    if (methodsWithBody.has(req.method.toUpperCase()) && !req.body)
         req.body = {}
-
+    
     next()
 })
 
-// parse cookies
-app.use(cookieParser())
+app.use(cookieParser()) // parse cookies
 
-// initialize passport
-app.use(passport.initialize())
 
-// google OAUTH2
-passport.use(googleAuth)
+app.use(passport.initialize()) // initialize passport
+
+passport.use(googleAuth) // google OAUTH2
+
 
 // Root route
 app.get('/', apiRoot);
@@ -82,11 +84,13 @@ app.get('/', apiRoot);
 // API landing route: lists available public and protected endpoints
 app.get('/api', getApiRoutes);
 
+// API documentations
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Auth-related routes
 app.use('/api/auth', authRouter);
 
-// Admin-only routes
-app.use('/api/admin', adminRouter);
+app.use('/api/admin', adminRouter); // Admin-only routes
 
 // Authenticated user routes
 app.use('/api/my-profile', userRouter);

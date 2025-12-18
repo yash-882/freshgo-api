@@ -33,9 +33,7 @@ const authRequiredFields = {
     ],
 
     requestEmailChange: [
-        'email',
-        'confirmNewPassword',
-        'newPassword'
+        'newEmail'
     ],
 
     changeEmailWithOTP: [
