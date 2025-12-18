@@ -3,15 +3,19 @@
 
 const prodErrorHandlers = {
     // mongoose cast error
-    CastError: err =>  `Invalid ${err.path || 'field'}`,
+    CastError: err =>  `${err.path} must be of type ${err.kind}`,
 
     // mongoose validation error
     ValidationError: err => {
-        // extract error messsages for each field and return array of messages
-    const errors = Object.values(err.errors).map(el => el.message);
-    // convert array of messages to a single string
-    const message = errors.join(', ')
-    return message;
+     const messages = Object.values(err.errors).map(el => {
+    // handle CastError inside ValidationError
+    if (el.name === 'CastError') {
+      return `${el.path} must be of type ${el.kind}`
+    }
+    return el.message
+  });
+
+  return messages.join(', ');
     },
 
     // Unauthorized error
