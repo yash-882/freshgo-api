@@ -73,6 +73,7 @@ const updateAddressByID = async (req, res, next) => {
             new CustomError('BadRequestError', 'Address ID is required for updation', 400))
     }
 
+    // find the address by ID
     const addressToUpdate = user.addresses.id(addressID)
 
     if (!addressToUpdate) {
@@ -82,7 +83,11 @@ const updateAddressByID = async (req, res, next) => {
 
     // apply updates for each field
     Object.keys(updates).forEach(key => {
+        if(updates[key] || updates[key] === 0)
         addressToUpdate[key] = updates[key] //replace field's value
+
+        else
+            delete addressToUpdate[key] //remove field
     })
 
     // save user
@@ -142,7 +147,7 @@ const deleteAddressByID = async (req, res, next) => {
     }
 
     // find address index in array
-    const addressIndex = user.addresses.findIndex(address => address._id === addressID)
+    const addressIndex = user.addresses.findIndex(address => address._id.toString() === addressID)
     if(addressIndex === -1){
         return next(
             new CustomError('NotFoundError', 'Address not found', 404));

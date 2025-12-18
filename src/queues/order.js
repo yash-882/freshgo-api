@@ -52,7 +52,7 @@ const updateOrderStatus = async (job) => {
                 orderStatus: 'cancelled',
             }, {
                 removeOnComplete: true, // remove the job after successful exeuction
-                delay: 1000 * 60 * 2, // 2 minutes
+                delay: 1000 * 60 * 10, // 10 minutes
                 attempts: 5, // retry attempts if the job fails
             })
             return;
