@@ -43,6 +43,12 @@ const addToCart = async (req, res, next) => {
     const userID = req.user.id;
     const { productID, quantity=1 } = req.body;
 
+    const requestedQuantity = Number(quantity);
+
+    if(isNaN(requestedQuantity)){
+        return next(new CustomError('BadRequestError', 'Quantity must be a number', 400));
+    }
+
     // quantity or product id is not provided
     if (!productID) {
         return next(new CustomError('BadRequestError', 'Product ID is required', 400));
@@ -67,18 +73,18 @@ const addToCart = async (req, res, next) => {
     .findIndex(item => item.product.toString() === productID);;
     
     if (itemIndex !== -1) {
-        const totalQuantity = cart.products[itemIndex].quantity + quantity;
+        const totalQuantity = cart.products[itemIndex].quantity + requestedQuantity;
         //throws error if requestedQuantity exceeds available product quantity
       validateStock( product, totalQuantity, req.nearbyWarehouse)
 
         // add up more quantity to the existing product
-        cart.products[itemIndex].quantity += quantity;
+        cart.products[itemIndex].quantity += requestedQuantity;
     }
 
     else{
 
     //throws error if requestedQuantity exceeds available product quantity
-    validateStock( product, quantity, req.nearbyWarehouse)
+    validateStock( product, requestedQuantity, req.nearbyWarehouse)
 
     // add new product to cart
     cart.products.push({ product: productID, quantity });

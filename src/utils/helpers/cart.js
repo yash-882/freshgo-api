@@ -87,6 +87,8 @@ const populateCart = async (user, nearbyWarehouse) => {
   {
     $project: {
        warehouses: 0,
+      'productDetails.tags': 0,
+      'productDetails.description': 0,
       'productDetails.warehouses': 0,
       'productDetails.score': 0,
       'productDetails.createdAt': 0,
