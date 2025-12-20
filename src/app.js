@@ -98,12 +98,12 @@ app.use('/api/my-cart', cartRouter);
 app.use('/api/my-orders', orderRouter);
 
 // Product routes
-app.use('/api/products/manager', productRouterManager); // Warehouse manager
+app.use('/api/manager/products', productRouterManager); // Warehouse manager
 app.use('/api/products', productRouter);                 // Public
 
 // Categories & warehouses
 app.use('/api/product-categories', categoryRouter); //public
-app.use('/api/warehouses', warehouseRouter); //Warehouse manager
+app.use('/api/manager/warehouse', warehouseRouter); //Warehouse manager
 
 
 // NOT-FOUND middleware: triggers when no route matches

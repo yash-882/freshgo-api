@@ -43,10 +43,12 @@
  * /my-orders:
  *   get:
  *     summary: Get logged-in user's orders
+ *     description: Fetch orders for the authenticated user using query filters.
  *     tags: [Orders]
  *     security:
  *       - cookieAuth: []
  *     parameters:
+ *       # -------- ORDER STATUS FILTER --------
  *       - in: query
  *         name: orderStatus
  *         schema:
@@ -62,6 +64,7 @@
  *             - reached_destination
  *         description: Filter orders by order status
  *
+ *       # -------- PAYMENT FILTERS --------
  *       - in: query
  *         name: paymentStatus
  *         schema:
@@ -84,11 +87,18 @@
  *             - netbanking
  *         description: Filter orders by payment method
  *
+ *       # -------- SORT / PAGINATION --------
  *       - in: query
  *         name: sort
  *         schema:
  *           type: string
- *         description: Sorting rule (e.g. createdAt,-totalAmount)
+ *         description: |
+ *           Sort fields (comma-separated).
+ *
+ *           Prefix with `-` for descending order.
+ *
+ *           Example:
+ *           `sort=createdAt,-totalAmount`
  *
  *       - in: query
  *         name: limit
@@ -106,13 +116,20 @@
  *         name: select
  *         schema:
  *           type: string
- *         description: Fields to include or exclude
+ *         description: |
+ *           Fields to include or exclude (comma-separated).
+ *
+ *           - Include fields: `select=orderStatus,totalAmount,createdAt`
+ *           - Exclude fields: `select=-products,-shippingAddress`
+ *
+ *           Mixing include and exclude is not allowed.
  *     responses:
  *       200:
  *         description: Orders fetched successfully
  *       401:
  *         description: Unauthorized
  */
+
 
 
 /**

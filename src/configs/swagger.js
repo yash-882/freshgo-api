@@ -27,7 +27,7 @@ const options = {
       }
     },
   },
-  apis: ['./docs/*'] // where route comments live
+  apis: ['./docs/**/*.js'] // where route comments live
 };
 
 module.exports = swaggerJsdoc(options);

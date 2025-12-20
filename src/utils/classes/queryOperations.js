@@ -148,10 +148,10 @@ class QueryOperations {
 
     //Convert sort string to MongoDB-compatible format
     createSortFields() {
-        if (!this.sortBy) return;
-            
+        if (!this.sortBy) return;     
 
-            const fields = this.sortBy.split(",");
+        // trim and get array
+        const fields = this.select?.replace(/\s+/g, '').split(',')
             
             // extract valid fields
             const validFields = [...new Set(fields)].filter(f => {
@@ -180,11 +180,11 @@ class QueryOperations {
 createSelectFields() {
     if (!this.select) return;
 
-    const fields = this.select.split(',')
+    // trim and get array 
+    const fields = this.select?.replace(/\s+/g, '').split(',')
 
     // allow specific field access based on role
     const allowedFields = this.schemaFields.allFields
-
 
     // extract valid fields 
     const selectedFields = [...new Set(fields)].filter(f => {

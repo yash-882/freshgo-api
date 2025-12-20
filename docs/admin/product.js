@@ -1,350 +1,329 @@
 /**
  * @swagger
- * /products/search:
- *   get:
- *     summary: Search products by text
- *     description: Performs full-text search on products using query filters.
- *     tags: [Products]
+ * /admin/products:
+ *   patch:
+ *     summary: Update multiple products (Admin)
+ *     description: |
+ *       Bulk update products using query string filters.
+ *
+ *       At least one filter is required.
+ *       `limit` can be used to restrict how many matched products are updated.
+ *       Only fields provided in the request body will be updated.
+ *     tags: [Admin - Products]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
- *       # -------- SEARCH VALUE --------
+ *       # -------- CATEGORY FILTERS --------
  *       - in: query
- *         name: value
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - fruits
+ *             - vegetables
+ *             - personal_care
+ *             - household_essentials
+ *             - dairy_and_breads
+ *             - beverages
+ *             - snacks
+ *             - health_and_wellness
+ *         description: Filter products by category
+ *
+ *       - in: query
+ *         name: subcategory
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - apple
+ *             - banana
+ *             - orange
+ *             - grape
+ *             - strawberry
+ *             - mango
+ *             - pineapple
+ *             - potato
+ *             - onion
+ *             - tomato
+ *             - carrot
+ *             - broccoli
+ *             - spinach
+ *             - cauliflower
+ *             - cucumber
+ *             - soap
+ *             - toothpaste
+ *             - toothbrush
+ *             - shampoo
+ *             - lotion
+ *             - conditioner
+ *             - body_wash
+ *             - sunscreen
+ *             - detergent
+ *             - tissue
+ *             - air_freshener
+ *             - glass_cleaner
+ *             - bathroom_cleaner
+ *             - surface_cleaner
+ *             - milk
+ *             - butter
+ *             - cheese
+ *             - paneer
+ *             - cream
+ *             - desi_ghee
+ *             - white_bread
+ *             - brown_bread
+ *             - multigrain_bread
+ *             - juice
+ *             - soda
+ *             - tea
+ *             - coffee
+ *             - water
+ *             - soft_drink
+ *             - energy_drink
+ *             - milkshake
+ *             - chips
+ *             - noodles
+ *             - cookies
+ *             - popcorn
+ *             - biscuits
+ *             - nuts
+ *             - chocolates
+ *             - namkeen
+ *             - sanitizer_and_disinfectant
+ *             - vitamin_and_supplement
+ *             - protein_powder
+ *         description: Filter products by subcategory
+ *
+ *       # -------- NUMERIC RANGE FILTERS --------
+ *       - in: query
+ *         name: price[gt]
+ *         schema:
+ *           type: number
+ *         description: Price greater than
+ *
+ *       - in: query
+ *         name: price[gte]
+ *         schema:
+ *           type: number
+ *         description: Price greater than or equal to
+ *
+ *       - in: query
+ *         name: price[lt]
+ *         schema:
+ *           type: number
+ *         description: Price less than
+ *
+ *       - in: query
+ *         name: price[lte]
+ *         schema:
+ *           type: number
+ *         description: Price less than or equal to
+ *
+ *       - in: query
+ *         name: quantity[gt]
+ *         schema:
+ *           type: number
+ *         description: Quantity greater than
+ *
+ *       # -------- LIMIT --------
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: number
+ *         description: |
+ *           Maximum number of matched products to update.
+ *           Useful for controlled bulk updates.
+ *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             minProperties: 1
+ *             description: |
+ *               Fields to update.
+ *               Only provided fields will be updated.
+ *     responses:
+ *       200:
+ *         description: Products updated successfully
+ *       400:
+ *         description: Empty body or invalid input
+ *       404:
+ *         description: No products found
+ */
+
+/**
+ * @swagger
+ * /admin/products:
+ *   delete:
+ *     summary: Delete multiple products (Admin)
+ *     description: |
+ *       Deletes multiple products using query-based filters.
+ *
+ *       ⚠️ At least one filter is required
+ *       (category, subcategory, or price range).
+ *     tags: [Admin - Products]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       # -------- CATEGORY FILTER --------
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - fruits
+ *             - vegetables
+ *             - personal_care
+ *             - household_essentials
+ *             - dairy_and_breads
+ *             - beverages
+ *             - snacks
+ *             - health_and_wellness
+ *         description: Filter products by category
+ *
+ *       # -------- SUBCATEGORY FILTER --------
+ *       - in: query
+ *         name: subcategory
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - apple
+ *             - banana
+ *             - orange
+ *             - grape
+ *             - strawberry
+ *             - mango
+ *             - pineapple
+ *             - potato
+ *             - onion
+ *             - tomato
+ *             - carrot
+ *             - broccoli
+ *             - spinach
+ *             - cauliflower
+ *             - cucumber
+ *             - soap
+ *             - toothpaste
+ *             - toothbrush
+ *             - shampoo
+ *             - lotion
+ *             - conditioner
+ *             - body_wash
+ *             - sunscreen
+ *             - detergent
+ *             - tissue
+ *             - air_freshener
+ *             - glass_cleaner
+ *             - bathroom_cleaner
+ *             - surface_cleaner
+ *             - milk
+ *             - butter
+ *             - cheese
+ *             - paneer
+ *             - cream
+ *             - desi_ghee
+ *             - white_bread
+ *             - brown_bread
+ *             - multigrain_bread
+ *             - juice
+ *             - soda
+ *             - tea
+ *             - coffee
+ *             - water
+ *             - soft_drink
+ *             - energy_drink
+ *             - milkshake
+ *             - chips
+ *             - noodles
+ *             - cookies
+ *             - popcorn
+ *             - biscuits
+ *             - nuts
+ *             - chocolates
+ *             - namkeen
+ *             - sanitizer_and_disinfectant
+ *             - vitamin_and_supplement
+ *             - protein_powder
+ *         description: Filter products by subcategory
+ *
+ *       # -------- PRICE RANGE FILTERS --------
+ *       - in: query
+ *         name: price[gt]
+ *         schema:
+ *           type: number
+ *         description: Delete products with price greater than
+ *
+ *       - in: query
+ *         name: price[gte]
+ *         schema:
+ *           type: number
+ *         description: Delete products with price greater than or equal to
+ *
+ *       - in: query
+ *         name: price[lt]
+ *         schema:
+ *           type: number
+ *         description: Delete products with price less than
+ *
+ *       - in: query
+ *         name: price[lte]
+ *         schema:
+ *           type: number
+ *         description: Delete products with price less than or equal to
+ *
+ *     responses:
+ *       200:
+ *         description: Products deleted successfully
+ *       400:
+ *         description: At least one filter is required
+ *       404:
+ *         description: No products found
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+
+
+/**
+ * @swagger
+ * /admin/products/{id}:
+ *   patch:
+ *     summary: Update product by ID (Admin)
+ *     tags: [Admin - Products]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Search keyword (required)
- *
- *       # -------- TEXT FILTER --------
- *       - in: query
- *         name: name
- *         schema:
- *           type: string
- *         description: Filter by product name
- *
- *       # -------- CATEGORY FILTERS --------
- *       - in: query
- *         name: category
- *         schema:
- *           type: string
- *           enum:
- *             - fruits
- *             - vegetables
- *             - personal_care
- *             - household_essentials
- *             - dairy_and_breads
- *             - beverages
- *             - snacks
- *             - health_and_wellness
- *
- *       - in: query
- *         name: subcategory
- *         schema:
- *           type: string
- *           enum:
- *             - apple
- *             - banana
- *             - orange
- *             - grape
- *             - strawberry
- *             - mango
- *             - pineapple
- *             - potato
- *             - onion
- *             - tomato
- *             - carrot
- *             - broccoli
- *             - spinach
- *             - cauliflower
- *             - cucumber
- *             - soap
- *             - toothpaste
- *             - toothbrush
- *             - shampoo
- *             - lotion
- *             - conditioner
- *             - body_wash
- *             - sunscreen
- *             - detergent
- *             - tissue
- *             - air_freshener
- *             - glass_cleaner
- *             - bathroom_cleaner
- *             - surface_cleaner
- *             - milk
- *             - butter
- *             - cheese
- *             - paneer
- *             - cream
- *             - desi_ghee
- *             - white_bread
- *             - brown_bread
- *             - multigrain_bread
- *             - juice
- *             - soda
- *             - tea
- *             - coffee
- *             - water
- *             - soft_drink
- *             - energy_drink
- *             - milkshake
- *             - chips
- *             - noodles
- *             - cookies
- *             - popcorn
- *             - biscuits
- *             - nuts
- *             - chocolates
- *             - namkeen
- *             - sanitizer_and_disinfectant
- *             - vitamin_and_supplement
- *             - protein_powder
- *
- *       # -------- NUMERIC RANGE FILTERS --------
- *       - in: query
- *         name: price[gt]
- *         schema:
- *           type: number
- *         description: Price greater than
- *
- *       - in: query
- *         name: price[gte]
- *         schema:
- *           type: number
- *         description: Price greater than or equal to
- *
- *       - in: query
- *         name: price[lt]
- *         schema:
- *           type: number
- *         description: Price less than
- *
- *       - in: query
- *         name: price[lte]
- *         schema:
- *           type: number
- *         description: Price less than or equal to
- *
- *       - in: query
- *         name: quantity[gt]
- *         schema:
- *           type: number
- *         description: Quantity greater than
- *
- *       # -------- SORT / PAGINATION --------
- *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *         description: |
- *           Sort fields (comma-separated).
- *
- *           Prefix with `-` for descending order.
- *
- *           Example:
- *           `sort=price,-createdAt`
- *
- *       - in: query
- *         name: limit
- *         schema:
- *           type: number
- *         description: Number of results to return
- *
- *       - in: query
- *         name: skip
- *         schema:
- *           type: number
- *         description: Number of results to skip
- *
- *       - in: query
- *         name: select
- *         schema:
- *           type: string
- *         description: |
- *           Fields to include or exclude (comma-separated).
- *
- *           - Include fields: `select=name,price,category`
- *           - Exclude fields: `select=-description,-images`
- *
- *           Mixing include and exclude is not allowed.
- *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             minProperties: 1
  *     responses:
  *       200:
- *         description: Products fetched successfully
+ *         description: Product updated successfully
  *       400:
- *         description: Search value is required
+ *         description: Empty body
+ *       404:
+ *         description: Product not found
  */
 
 /**
  * @swagger
- * /products:
- *   get:
- *     summary: Get products list
- *     description: Fetch products using query string filters.
- *     tags: [Products]
- *     parameters:
- *       # -------- TEXT FILTERS --------
- *       - in: query
- *         name: name
- *         schema:
- *           type: string
- *
- *       # -------- CATEGORY FILTERS --------
- *       - in: query
- *         name: category
- *         schema:
- *           type: string
- *           enum:
- *             - fruits
- *             - vegetables
- *             - personal_care
- *             - household_essentials
- *             - dairy_and_breads
- *             - beverages
- *             - snacks
- *             - health_and_wellness
- *
- *       - in: query
- *         name: subcategory
- *         schema:
- *           type: string
- *           enum:
- *             - apple
- *             - banana
- *             - orange
- *             - grape
- *             - strawberry
- *             - mango
- *             - pineapple
- *             - potato
- *             - onion
- *             - tomato
- *             - carrot
- *             - broccoli
- *             - spinach
- *             - cauliflower
- *             - cucumber
- *             - soap
- *             - toothpaste
- *             - toothbrush
- *             - shampoo
- *             - lotion
- *             - conditioner
- *             - body_wash
- *             - sunscreen
- *             - detergent
- *             - tissue
- *             - air_freshener
- *             - glass_cleaner
- *             - bathroom_cleaner
- *             - surface_cleaner
- *             - milk
- *             - butter
- *             - cheese
- *             - paneer
- *             - cream
- *             - desi_ghee
- *             - white_bread
- *             - brown_bread
- *             - multigrain_bread
- *             - juice
- *             - soda
- *             - tea
- *             - coffee
- *             - water
- *             - soft_drink
- *             - energy_drink
- *             - milkshake
- *             - chips
- *             - noodles
- *             - cookies
- *             - popcorn
- *             - biscuits
- *             - nuts
- *             - chocolates
- *             - namkeen
- *             - sanitizer_and_disinfectant
- *             - vitamin_and_supplement
- *             - protein_powder
- *
- *       # -------- NUMERIC RANGE FILTERS --------
- *       - in: query
- *         name: price[gt]
- *         schema:
- *           type: number
- *         description: Price greater than
- *
- *       - in: query
- *         name: price[gte]
- *         schema:
- *           type: number
- *         description: Price greater than or equal to
- *
- *       - in: query
- *         name: price[lt]
- *         schema:
- *           type: number
- *         description: Price less than
- *
- *       - in: query
- *         name: price[lte]
- *         schema:
- *           type: number
- *         description: Price less than or equal to
- *
- *       - in: query
- *         name: quantity[gt]
- *         schema:
- *           type: number
- *         description: Quantity greater than
- *
- *       # -------- SORT / PAGINATION --------
- *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *         description: |
- *           Sort fields (comma-separated).
- *
- *           Prefix with `-` for descending order.
- *
- *           Example:
- *           `sort=price,-createdAt`
- *
- *       - in: query
- *         name: limit
- *         schema:
- *           type: number
- *         description: Number of records to return
- *
- *       - in: query
- *         name: skip
- *         schema:
- *           type: number
- *         description: Number of records to skip
- *
- *       - in: query
- *         name: select
- *         schema:
- *           type: string
- *         description: |
- *           Fields to include or exclude (comma-separated).
- *
- *           - Include fields normally: `select=name,price`
- *           - Exclude fields by prefixing with `-`: `select=-description,-images`
- *
- *           Mixing include and exclude is not allowed.
- *
- *     responses:
- *       200:
- *         description: Products fetched successfully
- */
-
-/**
- * @swagger
- * /products/{id}:
- *   get:
- *     summary: Get product by ID
- *     tags: [Products]
+ * /admin/products/{id}:
+ *   delete:
+ *     summary: Delete product by ID (Admin)
+ *     tags: [Admin - Products]
+ *     security:
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -353,84 +332,50 @@
  *           type: string
  *     responses:
  *       200:
- *         description: Product fetched successfully
+ *         description: Product deleted successfully
  *       404:
  *         description: Product not found
  */
 
 /**
  * @swagger
- * /products/recommendations:
- *   get:
- *     summary: Get product recommendations based on order history
+ * /admin/products:
+ *   post:
+ *     summary: Create product(s) without images (Admin)
  *     description: |
- *       Returns up to 20 recommended products based on the user's
- *       recently delivered orders (last 45 days).
+ *       Creates one or multiple products using JSON input.
  *
- *       Recommendations are derived from previously purchased categories.
- *     tags: [Products]
+ *       If `withTagsAndDescription=true` is provided,
+ *       the system automatically generates:
+ *       - tags
+ *       - description
+ *       - subcategory
+ *
+ *       Otherwise, only `subcategory` is generated.
+ *     tags: [Admin - Products]
  *     security:
  *       - cookieAuth: []
  *     parameters:
  *       - in: query
- *         name: sort
+ *         name: withTagsAndDescription
  *         schema:
- *           type: string
- *         description: |
- *           Sort fields (comma-separated).
- *
- *           Prefix a field with `-` for descending order.
- *
- *           Example:
- *           `sort=price,-createdAt`
- *
- *       - in: query
- *         name: select
- *         schema:
- *           type: string
- *         description: |
- *           Fields to include or exclude (comma-separated).
- *
- *           - Include fields: `select=name,price,category`
- *           - Exclude fields: `select=-description,-images`
- *
- *           Mixing inclusion and exclusion is not allowed.
- *     responses:
- *       200:
- *         description: Recommendations fetched successfully
- *       401:
- *         description: Unauthorized
- */
-
-/**
- * @swagger
- * /products/image-search:
- *   post:
- *     summary: Search similar products using an image
- *     description: |
- *       Accepts either:
- *       - an image file upload, OR
- *       - an image URL
- *       
- *       AI is used to identify the product subcategory.
- *       NSFW or unsupported images will be rejected.
- *     tags: [Products]
+ *           type: boolean
+ *         description: Enable AI generation of tags and description
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               image:
- *                 type: string
- *                 format: binary
- *               imageURL:
- *                 type: string
- *                 example: https://example.com/product.jpg
+ *             oneOf:
+ *               - type: object
+ *               - type: array
  *     responses:
- *       200:
- *         description: Similar products fetched successfully
+ *       201:
+ *         description: Product(s) created successfully
  *       400:
- *         description: Invalid image or image URL
+ *         description: Invalid product data or missing product name
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
  */
