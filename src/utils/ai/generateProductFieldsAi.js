@@ -7,11 +7,11 @@ async function generateProductFieldsAi(prods=[], fieldsToAutoGenerate) {
 
     if(prods.length === 0)
         throw new CustomError(
-    'BadRequestError', 'Product name is required for generating description', 400);
+    'BadRequestError', 'Product name is required for auto-generating fields', 400);
     
     const products = await generateAiResponse(
 `Add only the following field(s): ${fieldsToAutoGenerate.join(', ')}. 
-Generate creative values for each product.
+Generate creative values for each product, add them existing data and return the data.
 
 Rules:
 1. 'description' – maximum 500 characters are allowed. (If included in fields above)

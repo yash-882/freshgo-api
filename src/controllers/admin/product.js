@@ -36,95 +36,72 @@ const createProductsWithImages = async (req, res, next) => {
 
     // UPLOAD IMAGES TO CLOUDINARY
 
-    let createdProductData;
     let uploadedImages = [];
     let session;
-    try{
+    try {
 
-    console.time('Images upload');
-    const imagesUploadPromises = req.files.map(f => 
-        streamUpload(f.buffer, f.originalname)
-    );
-
-    // wait for all images to be uploaded
-    uploadedImages = await Promise.all(imagesUploadPromises);
-    console.timeEnd('Images upload');
-
-
-    // get sanitized product body for DB (with images)
-    const productDataDB = getProductBodyForDB(productData, uploadedImages.map(img => ({
-        secure_url: img.secure_url,
-        originalname: img.display_name
-    })));
-
-    // AI AUTO-GENERATION LOGIC
-
-    let finalProductData;
-
-    console.time('AI Generation');
-    // If ?autoGeneration exists (fields to auto generate)
-    if (req.query.autoGeneration) {
-        const fieldsToAutoGenerate = Array.isArray(req.query.autoGeneration)
-            ? req.query.autoGeneration
-            : [req.query.autoGeneration || 'invalid'];
-
-        // Validate product names
-        const invalidNames = Array.isArray(productData) ? 
-        productData.some(p => !p.name) : !productData.name;
-
-        // disallowed fields
-        const notAllowedFields = fieldsToAutoGenerate.filter(
-            field => !['tags', 'description',].includes(field)
+        const imagesUploadPromises = req.files.map(f =>
+            streamUpload(f.buffer, f.originalname)
         );
 
-        if (invalidNames || notAllowedFields.length > 0) {
-            return next(
-                new CustomError(
+        // wait for all images to be uploaded
+        uploadedImages = await Promise.all(imagesUploadPromises);
+
+        // get sanitized product body for DB (with images)
+        const productBodyDB = getProductBodyForDB(productData, uploadedImages.map(img => ({
+            secure_url: img.secure_url,
+            originalname: img.display_name
+        })));
+
+        // AI AUTO-GENERATION LOGIC
+
+        let finalProductData;
+
+        // if auto-generation 
+        if ([true, 'true'].includes(req.query.withTagsAndDescription)) {
+            // Validate product names
+                    // Validate product names
+        const invalidNames = Array.isArray(productBodyDB) ?
+            productBodyDB.some(p => !p.name) : !productBodyDB.name;
+
+            // throw err
+            if (invalidNames)
+                return next(new CustomError(
                     'BadRequestError',
-                    invalidNames
-                        ? 'Product name is required for generating description'
-                        : `Field(s): ${notAllowedFields.join(', ')}, are not allowed for auto generation.`,
-                    400
-                )
+                    'Product name is required for auto generating Tags and Description.', 400));
+
+            limitProductCreationAi(productBodyDB)
+
+            finalProductData = await generateProductFieldsAi(
+                productBodyDB, ['tags', 'description', 'subcategory']
             );
+
         }
 
-        limitProductCreationAi(productData);
-        checkProductMissingFields(productDataDB, fieldsToAutoGenerate)
+        else {
+            // throws err if required fields missing
+            checkProductMissingFields(productBodyDB)
 
-        // AI generation
-        finalProductData = await generateProductFieldsAi(
-            productDataDB, 
-            [...fieldsToAutoGenerate, 'subcategory']
-        );
+            // let the AI generate 'subcategory' automatically
+            finalProductData = await generateProductFieldsAi(productBodyDB, ['subcategory']);
+        }
+
+        // SAVE PRODUCTS TO DB WITH TRANSACTION
+
+        let createdProducts;
+        session = await ProductModel.startSession();
+        await session.withTransaction(async () => {
+            createdProducts = await ProductModel.create(finalProductData, { ordered: true, session });
+        });
+
+        return sendApiResponse(res, 201, {
+            message: 'Product created successfully',
+            data: createdProducts
+        });
+
     }
-
-    else {
-
-        // throws err if required fields missing
-        checkProductMissingFields(productDataDB, ['subcategory'])
-
-        // let the AI generate 'subcategory' automatically (Default)
-        finalProductData = await generateProductFieldsAi(productDataDB, ['subcategory']);
-    }
-    console.timeEnd('AI Generation');
-
-    // SAVE PRODUCTS TO DB WITH TRANSACTION
-    console.time('DB Transaction');
-    session = await ProductModel.startSession();
-    await session.withTransaction(async () => {
-        createdProductData = await ProductModel.create(finalProductData, { session, ordered: true });
-    });
-    console.timeEnd('DB Transaction');
-    
-    return sendApiResponse(res, 201, {
-        message: 'Product created successfully',
-        data: createdProductData
-    });
-
-}
-    catch(err){
-        if(uploadedImages && uploadedImages.length > 0){
+    catch (err) {
+        if (uploadedImages && uploadedImages.length > 0) {
 
             // delete uploaded images from cloudinary on error
             cloudinary.api.delete_resources(uploadedImages.map(img => img.public_id))
@@ -134,66 +111,75 @@ const createProductsWithImages = async (req, res, next) => {
         return next(err);
     }
 
-    finally{
-        if(session){
-            session.endSession();
-        }
+    finally {
+        session ? await session.endSession() : null;
     }
 }
 
 
 // create products without images
 const createProducts = async (req, res, next) => {
-    const products = Array.isArray(req.body) ? req.body :  [req.body];
+    const products = Array.isArray(req.body) ? req.body : [req.body];
 
-    if(products.length === 0)
+    if (products.length === 0)
         return next(new CustomError('BadRequestError', 'Product data is required', 400));
-    
+
 
     // throws error if products limit exceeds
     limitProductCreation(products)
 
-    let productData;
-    const productBody = getProductBodyForDB(products);
+    const productBodyDB = getProductBodyForDB(products);
+    let finalProductData;
 
     // if auto-generation 
-    if(req.query.autoGeneration) {
+    if ([true, 'true'].includes(req.query.withTagsAndDescription)) {
 
-        // get fields to auto-generate
-        const fieldsToAutoGenerate = Array.isArray(req.query.autoGeneration) ? 
-        req.query.autoGeneration : [req.query.autoGeneration];
-        
-        const invalidNames = products.some(p => !p.name);
-        const notAllowedFields = fieldsToAutoGenerate.filter(field => !['tags', 'description' ].includes(field));
+        // Validate product names
+        const invalidNames = Array.isArray(productBodyDB) ?
+            productBodyDB.some(p => !p.name) : !productBodyDB.name;
 
         // throw err
-        if (invalidNames || notAllowedFields.length > 0)
+        if (invalidNames)
             return next(new CustomError(
-        'BadRequestError',
-        invalidNames ?
-        'Product name is required for generating description'
-                    : `Field(s): ${notAllowedFields.join(', ')}, are not allowed for auto generation.`,
-                400));
-                
-                limitProductCreationAi(products) //limit products for AI auto-generation
-                productData = await generateProductFieldsAi(productBody, fieldsToAutoGenerate)
-            }
-            
-            else{
-                // throws err if required fields missing
-                checkProductMissingFields(productBody)
+                'BadRequestError',
+                'Product name is required for auto generating Tags and Description.', 400));
 
-                // let the AI generate 'subcategory' automatically
-                productData = await generateProductFieldsAi(productBody, ['subcategory']);
-            }
+        limitProductCreationAi(productBodyDB)
+
+        finalProductData = await generateProductFieldsAi(
+            productBodyDB, ['tags', 'description', 'subcategory']
+        );
+    }
+
+    else {
+        // throws err if required fields missing
+        checkProductMissingFields(productBodyDB)
+
+        // let the AI generate 'subcategory' automatically
+        finalProductData = await generateProductFieldsAi(productBodyDB, ['subcategory']);
+    }
 
 
-    const createdProducts =  await ProductModel.create(productData || products)
+    let session
+    try {
 
-    sendApiResponse(res, 201, {
-        message: 'Product created successfully',
-        data: createdProducts
-    })
+        session = await ProductModel.startSession();
+        let createdProducts;
+        await session.withTransaction(async () => {
+            createdProducts = await ProductModel.create(finalProductData, { ordered: true, session });
+        })
+
+        sendApiResponse(res, 201, {
+            message: 'Product created successfully',
+            data: createdProducts
+        })
+    }
+    catch (err) {
+        return next(err);
+    }
+    finally {
+        session ? await session.endSession() : null;
+    }
 }
 
 // update multiple products
