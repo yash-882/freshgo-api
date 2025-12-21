@@ -1,3 +1,4 @@
 # BACKEND
 /node_modules/
 /src/configs/file.env
+/backup
