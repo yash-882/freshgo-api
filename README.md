@@ -116,77 +116,27 @@ npm run dev
 ```
 
 ## 📂 Project Structure
-
 ```
+├── docs/
 ├── src/
-│   ├── app.js              # Main Express application
-│   ├── server.js           # Server startup and database connection
-│   ├── configs/            # Configuration files
-│   │   ├── loadEnv.js      # Loads environment variables
-│   │   ├── redisClient.js  # Redis client configuration
-│   │   ├── ioredisClient.js # IORedis client configuration (BullMQ)
-│   │   ├── cors.js         # CORS configuration
-│   │   ├── razorpay.js     # Razorpay configuration
-│   │   └── file.env        # Environment variables file
-│   ├── controllers/        # Route handlers
-│   │   ├── productCategory.js # Product category controllers
-│   │   ├── product.js      # Product controllers
-│   │   ├── auth.js         # Authentication controllers
-│   │   ├── apiEntry.js     # API entry point controllers
-│   │   ├── order.js        # Order controllers
-│   │   ├── user.js         # User controllers
-│   │   └── cart.js         # Cart controllers
-│   ├── middlewares/        # Custom middleware
-│   │   └── error.js        # Error handling middleware
-│   ├── models/             # Mongoose models
-│   │   ├── warehouse.js    # Warehouse model
-│   │   ├── productCategory.js # Product category model
-│   │   ├── product.js      # Product model
-│   │   ├── user.js         # User model
-│   │   ├── order.js        # Order model
-│   │   └── cart.js         # Cart model
-│   ├── routes/             # API routes
-│   │   ├── auth.js         # Authentication routes
-│   │   ├── admin.js        # Admin routes
-│   │   ├── product.js      # Product routes
-│   │   ├── cart.js         # Cart routes
-│   │   ├── user.js         # User routes
-│   │   ├── order.js        # Order routes
-│   │   ├── category.js     # Category routes
-│   │   ├── productManager.js # Product Manager routes
-│   │   └── warehouse.js    # Warehouse routes
-│   ├── auth-strategies/    # Authentication strategies
-│   │   └── googleAuth.js   # Google OAuth2 strategy
-│   ├── error-handling/     # Custom error handling
-│   │   └── customError.js  # Custom error class
-│   ├── utils/              # Utility functions
-│   │   ├── apiResponse.js  # API response utility
-│   │   ├── mailjet.js      # Mailjet integration
-│   │   ├── queries/        # Database queries
-│   │   │   └── product.js  # Product queries
-│   │   ├── helpers/        # Helper functions
-│   │   │   ├── jwt.js      # JWT helper functions
-│   │   │   ├── auth.js     # Authentication helper functions
-│   │   │   ├── cache.js    # Caching helper functions
-│   │   │   ├── cart.js     # Cart helper functions
-│   │   │   ├── product.js  # Product helper functions
-│   │   │   └── order.js    # Order helper functions
-│   │   ├── classes/        # Custom classes
-│   │   │   └── redisService.js # Redis service class
-│   │   ├── ai/             # AI related utilities
-│   │   │   └── identifyProductAi.js # AI product identification
-│   │   └── queues/         # Message queues
-│   │       ├── order.js    # Order queue
-│   │       └── email.js    # Email queue
-│   ├── constants/          # Constant values
-│   │   ├── cacheKeyBuilders.js # Cache key builders
-│   │   └── productCategories.js # Product categories
-│   └── queues/             # Queue definitions
-│       ├── order.js        # Order processing queue
-│       └── email.js        # Email sending queue
+│   ├── auth-strategies/
+│   ├── configs/
+│   ├── constants/
+│   ├── controllers/
+│   ├── error-handling/
+│   ├── middlewares/
+│   ├── models/
+│   ├── public/
+│   ├── queues/
+│   ├── routes/
+│   ├── scripts/
+│   ├── utils/
+│   ├── app.js
+│   └── server.js
+├── .gitignore
+├── LICENSE
 ├── package.json
-├── README.md
-└── .gitignore
+└── README.md
 ```
 
 ## 🤝 Contributing
