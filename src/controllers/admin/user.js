@@ -47,9 +47,6 @@ const updateUserByID = async (req, res, next) => {
 
     const updates = req.body 
 
-    // set for pre schema hook
-    updates.byAdmin = true
-
     if(updates.roles){
         // mongodb operator for pushing an element in array field 
         // (only inserts if the element doesn't exist in array)
@@ -62,6 +59,7 @@ const updateUserByID = async (req, res, next) => {
     // updating user...
     const user = await UserModel.findByIdAndUpdate(userID, {$set: updates}, {
         new: true,
+        byAdmin: true, // flag for pre schema hook to allow updating any field
         runValidators: true
     })
 
@@ -83,12 +81,10 @@ const updateUsers = async (req, res, next) => {
 
     const updates = req.body; //changes for updation
     
-    // set for pre schema hook
-    updates.byAdmin = true
-
     // updating users...
     const users = await UserModel.updateMany(filter, {$set: updates}, {
         new: true,
+        byAdmin: true, // flag for pre schema hook to allow updating any field
         runValidators: true
     })
 

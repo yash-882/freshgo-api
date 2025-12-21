@@ -191,11 +191,10 @@ const adminUpdateProducts = async (req, res, next) => {
     const { filter } = req.sanitizedQuery; // which products to update
     const updates = req.body; // updates
 
-    updates.byAdmin = true;
-
     // update all matching products
     const result = await ProductModel.updateMany(filter, { $set: updates }, {
         runValidators: true,
+        byAdmin: true // flag for pre schema hook to allow updating any field
     });
 
     if (result.matchedCount === 0) {
@@ -237,14 +236,17 @@ const adminUpdateProductByID = async (req, res, next) => {
     if (Object.keys(req.body || {}).length === 0) {
         return next(new CustomError('BadRequestError', 'Body is empty for updation!', 400));
     }
-
     const productID = req.params.id;
+
+    if(!productID)
+        return next(new CustomError('BadRequestError', 'Product ID is required for updation!', 400));
+
     const updates = req.body;
 
-    updates.byAdmin = true;
     const product = await ProductModel.findByIdAndUpdate(productID, { $set: updates }, {
         new: true,
         runValidators: true,
+        byAdmin: true  // flag for pre schema hook to allow updating any field
     });
 
     if (!product) {
@@ -264,6 +266,11 @@ const adminUpdateProductByID = async (req, res, next) => {
 // delete product by ID 
 const adminDeleteProductByID = async (req, res, next) => {
     const productID = req.params.id;
+
+    if(!productID)
+        return next(new CustomError(
+            'BadRequestError',
+            'Product ID is required for deletion!', 400));
 
     const deletedProduct = await ProductModel.findByIdAndDelete(productID);
 

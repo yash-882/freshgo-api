@@ -123,7 +123,9 @@ UserSchema.pre('save', async function(next) {
 // runs before updating the document(s)
 UserSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], 
     async function(next) {
-    const updates = this.getUpdate(); //changes for updationrf
+    const updates = this.getUpdate(); //changes for updation
+    const updateByAdmin = this.getOptions().byAdmin; // restrict updates for fields by Non-admin role
+    
         if (updates.$set) {
             updates = updates.$set;
         }
@@ -131,7 +133,7 @@ UserSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'],
     // prevents direct updates by non-admin roles to sensitive fields
     const notAllowedUpdates = ['email', 'auth', 'roles']
 
-    if(!updates.byAdmin){
+    if(updateByAdmin !== true){
         Object.keys(updates).forEach(update => {
             if(notAllowedUpdates.includes(update)){
                 delete updates[update]
@@ -141,8 +143,6 @@ UserSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'],
 
     // this field is only allowed for updation through .save()
     delete updates.addresses;
-
-    delete updates.byAdmin;
 
     next()   
 })

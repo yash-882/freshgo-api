@@ -137,11 +137,12 @@ ProductSchema.index({
 
 ProductSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], 
     async function(next) {
-        const updates = this.getUpdate(); //changes for updation
-
+        const updates = this.getUpdate(); //changes for updation 
         const forbiddenFields = []
         const allowedForUpdation = ['warehouses']
 
+        const updateByAdmin = this.getOptions().byAdmin; // restrict updates for fields by Non-admin role
+        
         // check forbidden fields 
         for (const operator of ['$set', '$pull', '$push', '$inc']) {
             if (updates[operator]) {
@@ -154,16 +155,13 @@ ProductSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'],
             }
         }
 
-        if (!updates.byAdmin && forbiddenFields.length > 0) {
+        // UPDATES BY NON-ADMIN ROLE
+        if (updateByAdmin !== true && forbiddenFields.length > 0) {
             return next(
                 new CustomError('ForbiddenError',
                     `You are not allowed to update: ${forbiddenFields.join(', ')}`, 403)
             );
         }
-
-        // optionally clean helper flag
-        delete updates.byAdmin;
-
 next();
     })
 
