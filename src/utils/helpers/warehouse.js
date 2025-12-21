@@ -12,7 +12,7 @@ const getNearbyWarehouse = async ({longitude, latitude}) => {
         location: {
             $near: {
                 $geometry: { type: "Point", coordinates: [longitude, latitude] },
-                $maxDistance: 1_000_000 //1000KM
+                $maxDistance: 100_000 //100KM (demo)
             }
         }
     }).select('_id location.coordinates');
