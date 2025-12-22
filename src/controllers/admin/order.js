@@ -190,7 +190,7 @@ const getOrderStats = async (req, res, next) => {
 
     const { time } = req.query || {}
 
-    if(time && !['last_30_days', 'this_year', 'last_day'].includes(time)){
+    if(time && !['last_30_days', 'year_to_date', 'last_day'].includes(time)){
         return next(new CustomError('BadRequestError', 'Invalid param value!', 400))
     }
 
