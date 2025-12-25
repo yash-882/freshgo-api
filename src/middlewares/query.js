@@ -8,8 +8,6 @@ const handleQuery = (schemaFields) => {
         const queryParamsLength = Object.keys(req.query).length
         const isSearchQuery = req.path === '/search' && queryParamsLength > 0 && req.query.value
    
-
-
         const searchValue = isSearchQuery ? req.query.value : null;
 
     const operation = new QueryOperations(req.query, schemaFields)

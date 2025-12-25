@@ -54,7 +54,7 @@ This project is an e-commerce grocery platform API built with Node.js, Express, 
 - **HTTP Security**: Helmet
 - **CORS**: CORS
 - **Request Parsing**: qs, cookie-parser
-- **ORM**: Mongoose
+- **ODM**: Mongoose
 - **Email Sending**: Mailjet
 - **Rate Limiting**: express-rate-limit
 - **AI Tools**: AI features are powered by Groq via an OpenAI-compatible API, with the OpenAI SDK used as the client for request formatting and communication.
