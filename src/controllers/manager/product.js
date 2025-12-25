@@ -73,7 +73,7 @@ const deleteProductsFromMyWarehouse = async (req, res, next) => {
   } catch (err) {
     next(err);
   } finally {
-    if (session) session.endSession();
+    if (session) await session.endSession();
   }
 }
 
@@ -154,7 +154,7 @@ const addProductsToMyWarehouse = async (req, res, next) => {
     next(error);
   } finally {
     if (session) {
-      session.endSession();
+      await session.endSession();
     }
   }
 

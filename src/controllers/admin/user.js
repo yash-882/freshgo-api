@@ -143,7 +143,7 @@ const deleteUserByID = async (req, res, next) => {
     } finally {
 
         if (session)
-            session.endSession() // end transaction session
+            await session.endSession() // end transaction session
     }
 }
 
@@ -203,7 +203,7 @@ const deleteUsers = async (req, res, next) => {
     } finally {
 
         if (session)
-            session.endSession() // end transaction session
+            await session.endSession() // end transaction session
     }
 }
 

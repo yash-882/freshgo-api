@@ -650,7 +650,7 @@ const deleteMyAccount = async (req, res, next) => {
     } finally {
 
         if (session)
-            session.endSession() // end transaction session
+            await session.endSession() // end transaction session
     }
 }
 
