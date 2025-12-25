@@ -21,7 +21,10 @@ const { promisify } = require("util");
 
 // signup user after OTP validation
 const signUp = async (req, res, next) => {
-    const {email, OTP: enteredOTP} = req.body
+    const {email, OTP: enteredOTP} = {
+        ...req.body,
+        email: req.body.email.toLowerCase()
+    }
 
     if(await findUserByQuery({email}, false))
         return next(new CustomError('ConflictError', 'Email is already taken!', 409));
@@ -110,7 +113,7 @@ const signUp = async (req, res, next) => {
 
 // sign-up controller
 const validateForSignUp = async (req, res, next) => {
-    const body = req.body;
+    const body = {...req.body, email: req.body.email.toLowerCase()};
 
     // if password is not confirmed correctly
     if(body.password !== body.confirmPassword)
@@ -181,7 +184,10 @@ const validateForSignUp = async (req, res, next) => {
 
 // login controller
 const login = async (req, res, next) => {
-    const {email, password} = req.body;
+    const {email, password} = {
+        ...req.body,
+        email: req.body.email.toLowerCase()
+    };
 
    // check if user exists in DB with the given email
     const user = await findUserByQuery({email}, true, 'Email is not registered with us!');
@@ -311,7 +317,8 @@ const changePassword = async (req, res, next) => {
 const resetPassword = async (req, res, next) => {
 
     // get email from body
-    const {email} = req.body || {}
+    let {email} = req.body || {}
+    email = email.toLowerCase()
 
     // finds user in DB, throws error if not found 
     await findUserByQuery({email}, true, 'Email is not registered with us!')
@@ -359,7 +366,10 @@ sendApiResponse(res, 201, {
 // verifies the OTP and change password
 const verifyPasswordResetOTP = async (req, res, next) => {
 
-    const {OTP: enteredOTP, email} = req.body;
+    const { OTP: enteredOTP, email } = {
+        ...req.body,
+        email: req.body.email.toLowerCase()
+    }
 
     // a unique key is generated with the combination of 'purpose' and 'email' for Redis
     const otpStore = new RedisService(email, 'RESET_PASSWORD_OTP')
@@ -417,7 +427,10 @@ const verifyPasswordResetOTP = async (req, res, next) => {
 // resets password using a valid password reset token
 const submitNewPassword = async (req, res, next) => {
 
-    const {email, newPassword, confirmNewPassword} = req.body 
+    const { email, newPassword, confirmNewPassword } = {
+        ...req.body,
+        email: req.body.email.toLowerCase()
+    }
 
     const throwInvalidSessionError = () => 
         next(new CustomError('UnauthorizedError', 'Session has been expired or not valid!', 401));
@@ -487,7 +500,8 @@ const submitNewPassword = async (req, res, next) => {
 
 const requestEmailChange = async (req, res, next) => {
     const user = req.user; //ensure user is authenticated
-    const { newEmail } = req.body;
+    let { newEmail } = req.body;
+    newEmail = newEmail.toLowerCase();
 
     // Check if email already exists
     const existing = await UserModel.findOne({ email: newEmail });
@@ -543,8 +557,6 @@ const changeEmailWithOTP = async (req, res, next) => {
     // a unique key is generated with the combination of 'purpose' and 'email' for Redis
     const otpStore = new RedisService(user.email, 'EMAIL_CHANGE_OTP')
     const userOTPKey = otpStore.getKey()
-
-    
 
     //throws custom error if the request limit is exceeded or data is not found
     const OTPData = await trackOTPLimit({
