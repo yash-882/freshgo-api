@@ -30,7 +30,6 @@ const swaggerSpec = require('./configs/swagger');
 
 // configs
 const setCors = require('./configs/cors.js');
-const { apiRoot, getApiRoutes } = require('./controllers/apiEntry.js');
 
 // set security HTTP headers
 app.use(helmet())
@@ -78,11 +77,10 @@ app.use(passport.initialize()) // initialize passport
 passport.use(googleAuth) // google OAUTH2
 
 
-// Root route
-app.get('/', apiRoot);
-
-// API landing route: lists available public and protected endpoints
-app.get('/api', getApiRoutes);
+// backend root
+app.get('/', (req, res, next) => {
+    res.send('API is working. Visit /api/docs to test it.')
+});
 
 // API documentations
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
