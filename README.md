@@ -1,4 +1,4 @@
-# 🛍️ E-Commerce Grocery API
+# 🛍️ FreshGo - E-Commerce Grocery API
 *A backend-only REST API designed to be consumed by web or mobile frontends.*
 
 This project is an e-commerce grocery platform API built with Node.js, Express, and MongoDB. It exposes RESTful endpoints for managing products, categories, users, carts, orders, and authentication. Redis is used for caching frequently accessed data, while BullMQ handles asynchronous tasks such as order processing and email notifications. Authentication is implemented using JWT and Google OAuth2, making the API suitable for integration with frontend applications.
