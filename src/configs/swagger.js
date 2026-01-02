@@ -12,7 +12,7 @@ const options = {
     },
     servers: [
       {
-        url: 'https://freshgo.onrender.com/api',
+        url: 'http://localhost:3000/api',
         description: 'Production server'
       }
     ],

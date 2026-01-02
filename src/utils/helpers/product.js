@@ -15,7 +15,9 @@ const updateProductsOnDelivery = async products => {
             $inc: {
                 score: 1,
             },
-            byAdmin: true,
+        },
+        {
+          byAdmin: true
         }
     );
 };
@@ -36,7 +38,6 @@ const updateProductsOnCancellation = async (products, nearbyWarehouse) => {
 
                 $inc: {
                     'warehouses.$.quantity': item.quantity,
-                    byAdmin: true
                 }
             }
         }

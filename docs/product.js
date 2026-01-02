@@ -4,6 +4,7 @@
  *   get:
  *     summary: Search products by text
  *     description: Performs full-text search on products using query filters.
+ *                  You can optionally attach a cookie named coordinates in the format [long, lat]. The client should send valid coordinates located within India; otherwise, the response may return empty results or a message such as “Not available in your area.” If the cookie is not provided, the API will automatically assign a demo warehouse with full stock.
  *     tags: [Products]
  *     parameters:
  *       # -------- SEARCH VALUE --------
@@ -180,6 +181,7 @@
  *   get:
  *     summary: Get products list
  *     description: Fetch products using query string filters.
+ *                  You can optionally attach a cookie named coordinates in the format [long, lat]. The client should send valid coordinates located within India; otherwise, the response may return empty results or a message such as “Not available in your area.” If the cookie is not provided, the API will automatically assign a demo warehouse with full stock.
  *     tags: [Products]
  *     parameters:
  *       # -------- TEXT FILTERS --------
@@ -344,6 +346,12 @@
  * /products/{id}:
  *   get:
  *     summary: Get product by ID
+ *     description: >
+ *       You can optionally attach a cookie named `coordinates` in the format
+ *       `[long, lat]`. The client should send valid coordinates within India;
+ *       otherwise, the response may return empty results or a message such as
+ *       "Not available in your area". If the cookie is not provided, the API
+ *       will automatically assign a demo warehouse that always has full stock. <br> <br>
  *     tags: [Products]
  *     parameters:
  *       - in: path
@@ -363,10 +371,15 @@
  * /products/recommendations:
  *   get:
  *     summary: Get product recommendations based on order history
- *     description: |
+*     description: >
+ *       You can optionally attach a cookie named `coordinates` in the format
+ *       `[long, lat]`. The client should send valid coordinates within India;
+ *       otherwise, the response may return empty results or a message such as
+ *       "Not available in your area". If the cookie is not provided, the API
+ *       will automatically assign a demo warehouse that always has full stock. <br> <br>
+
  *       Returns up to 20 recommended products based on the user's
  *       recently delivered orders (last 45 days).
- *
  *       Recommendations are derived from previously purchased categories.
  *     tags: [Products]
  *     security:
@@ -404,14 +417,18 @@
 
 /**
  * @swagger
- * /products/image-search:
+* /products/image-search:
  *   post:
  *     summary: Search similar products using an image
- *     description: |
+ *     description: >
+ *       You can optionally attach a cookie named `coordinates` in the format
+ *       `[long, lat]`. The client should send valid coordinates within India;
+ *       otherwise, the response may return empty results or a message such as
+ *       "Not available in your area". If the cookie is not provided, the API
+ *       will automatically assign a demo warehouse that always has full stock. <br> <br>
  *       Accepts either:
- *       - an image file upload, OR
- *       - an image URL
- *       
+ *        - an image file upload, or
+ *        - an image URL <br> <br>
  *       AI is used to identify the product subcategory.
  *       NSFW or unsupported images will be rejected.
  *     tags: [Products]
