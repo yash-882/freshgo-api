@@ -84,7 +84,6 @@
  *             - card
  *             - upi
  *             - cash_on_delivery
- *             - netbanking
  *         description: Filter orders by payment method
  *
  *       # -------- SORT / PAGINATION --------

@@ -68,7 +68,6 @@ const OrderSchema = new Schema({
         type: String,
         default: null,
         trim: true,
-        lowercase: true
     },
     totalAmount: {
         type: Number,
@@ -95,7 +94,7 @@ const OrderSchema = new Schema({
     paymentMethod: {
         type: String,
         enum: {
-            values: ['card', 'upi', 'cash_on_delivery', 'netbanking'],
+            values: ['card', 'upi', 'cash_on_delivery'],
             message: 'Invalid payment method!'
         },
         
