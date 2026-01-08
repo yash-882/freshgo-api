@@ -76,16 +76,6 @@
  *             - failed
  *         description: Filter orders by payment status
  *
- *       - in: query
- *         name: paymentMethod
- *         schema:
- *           type: string
- *           enum:
- *             - card
- *             - upi
- *             - cash_on_delivery
- *         description: Filter orders by payment method
- *
  *       # -------- SORT / PAGINATION --------
  *       - in: query
  *         name: sort

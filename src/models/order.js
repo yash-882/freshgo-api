@@ -68,6 +68,7 @@ const OrderSchema = new Schema({
         type: String,
         default: null,
         trim: true,
+        unique: true, // unique order ID from Razorpay
     },
     totalAmount: {
         type: Number,
@@ -115,7 +116,10 @@ const OrderSchema = new Schema({
     toJSON: { virtuals: true }, toObject: { virtuals: true }
 })
 
+// Indexing
+OrderSchema.index({ user: 1, orderStatus: 1}); // for filtering orders by status for a user
 
+// -----------------------------------------
 // sum of all products including their quantities 
 OrderSchema.virtual('totalItemsQuantity',).get(function(){
     return this.products.reduce((totalItems, item) => totalItems + item.quantity, 0)
