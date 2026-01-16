@@ -25,7 +25,6 @@
 *                 type: string
 *                 enum:
 *                   - cash_on_delivery
-*                   - net_banking
 *                   - card
 *                   - upi
 *                 example: cash_on_delivery

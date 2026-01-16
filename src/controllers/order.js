@@ -147,10 +147,15 @@ const createOrder = async (req, res, next) => {
 
 // Razorpay makes a POST request on this handler/route for the payment result
 const razorpayVerify = async (req, res, next) => {
-    const payload = req.body
+
+    if (!req.rawBody) {
+        return next(new CustomError('BadRequestError', 'Payload is required', 400))
+    }
+
+    const payload = JSON.parse(req.rawBody);
     const razorpaySignature = req.headers["x-razorpay-signature"];
 
-    console.log( 'payload',payload.payload);
+    console.log( 'payload',payload);
     console.log( 'id',payload.payload?.payment?.entity?.order_id);
 
     const order = await OrderModel.findOne(
