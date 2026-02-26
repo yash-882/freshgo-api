@@ -255,8 +255,8 @@ const login = async (req, res, next) => {
 const logout = async (req, res, next) => {
 
     // clear all tokens
-    res.clearCookie('AT', { httpOnly: true, sameSite: "none"})
-    res.clearCookie('RT', { httpOnly: true, sameSite: "none"})
+    res.clearCookie('AT', { httpOnly: true, sameSite: "none", secure: true})
+    res.clearCookie('RT', { httpOnly: true, sameSite: "none", secure: true})
 
     // user logged out successfully
     sendApiResponse(res, 201, {

@@ -151,7 +151,7 @@ class QueryOperations {
         if (!this.sortBy) return;     
 
         // trim and get array
-        const fields = this.select?.replace(/\s+/g, '').split(',')
+        const fields = this.sortBy?.replace(/\s+/g, '').split(',')
             
             // extract valid fields
             const validFields = [...new Set(fields)].filter(f => {
