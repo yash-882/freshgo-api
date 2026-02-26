@@ -2,7 +2,8 @@
 const setCookie = (res, key, value, maxAge=15*60*1000) =>
     res.cookie(key, value, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: 'none',
+        secure: true,
         maxAge,
     })
 
@@ -10,7 +11,8 @@ const setCookie = (res, key, value, maxAge=15*60*1000) =>
 const clearCookie = (res, key) =>
     res.clearCookie(key, {
         httpOnly: true,
-        sameSite: 'strict'
+        sameSite: 'none',
+        secure: true,
     })
 
 module.exports = { setCookie, clearCookie };

@@ -83,13 +83,15 @@ const signUp = async (req, res, next) => {
     // store tokens in the browser cookies
     res.cookie('AT', tokens.AT, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: "none",
+        secure: true,
         expires: new Date(Date.now() + tokens.AT_AGE * 60 * 1000), // minutes 
     });
 
     res.cookie('RT', tokens.RT, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: "none",
+        secure: true,
         expires: new Date(Date.now() + tokens.RT_AGE * 24 * 60 * 60 * 1000), // days
     });
 
@@ -227,13 +229,15 @@ const login = async (req, res, next) => {
     // store tokens in the browser cookies
     res.cookie('AT', tokens.AT, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: "none",
+        secure: true,
         expires: new Date(Date.now() + tokens.AT_AGE * 60 * 1000), // minutes 
     });
 
     res.cookie('RT', tokens.RT, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: "none",
+        secure: true,
         expires: new Date(Date.now() + tokens.RT_AGE * 24 * 60 * 60 * 1000), // days
     });
 
@@ -251,8 +255,8 @@ const login = async (req, res, next) => {
 const logout = async (req, res, next) => {
 
     // clear all tokens
-    res.clearCookie('AT', { httpOnly: true, sameSite: 'strict'})
-    res.clearCookie('RT', { httpOnly: true, sameSite: 'strict'})
+    res.clearCookie('AT', { httpOnly: true, sameSite: "none"})
+    res.clearCookie('RT', { httpOnly: true, sameSite: "none"})
 
     // user logged out successfully
     sendApiResponse(res, 201, {
@@ -413,7 +417,8 @@ const verifyPasswordResetOTP = async (req, res, next) => {
 
     res.cookie('PRT', passwordJWT, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: "none",
+        secure: true,
         expires: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes 
     });
 
@@ -631,8 +636,8 @@ const deleteMyAccount = async (req, res, next) => {
         })
 
     // clear all tokens
-    res.clearCookie('AT', { httpOnly: true, sameSite: 'strict'})
-    res.clearCookie('RT', { httpOnly: true, sameSite: 'strict'})
+    res.clearCookie('AT', { httpOnly: true, sameSite: "none"})
+    res.clearCookie('RT', { httpOnly: true, sameSite: "none"})
 
     // delete the user in cache
     await deleteCachedData(cacheKeyBuilders.pvtResources(userID), 'profile')
@@ -691,13 +696,15 @@ const googleAuthCallback = (req, res, next) => {
     // store tokens in the browser cookies
     res.cookie('AT', tokens.AT, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: "none",
+        secure: true,
         expires: new Date(Date.now() + tokens.AT_AGE * 60 * 1000), // minutes 
     });
 
     res.cookie('RT', tokens.RT, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: "none",
+        secure: true,
         expires: new Date(Date.now() + tokens.RT_AGE * 24 * 60 * 60 * 1000), // days
     });
     

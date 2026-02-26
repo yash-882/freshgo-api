@@ -134,7 +134,8 @@ const authorizeUser = async (req, res, next) => {
         // store access token in the browser cookies
         res.cookie('AT', newToken, {
             httpOnly: true,
-            sameSite: 'strict',
+            sameSite: 'none',
+            secure: true,
             expires: new Date(Date.now() + AT_AGE * 60 * 1000), // minutes 
         });
     }
