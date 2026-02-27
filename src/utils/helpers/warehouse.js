@@ -7,6 +7,9 @@ const getManagedWarehouseByUser = async (user) => {
 }
 
 const getNearbyWarehouse = async ({longitude, latitude}) => {
+
+    console.log('long, lat', longitude, latitude);
+    
       // get the warehouse nearest to user
     return await WarehouseModel.findOne({
         location: {

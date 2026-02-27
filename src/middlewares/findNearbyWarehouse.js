@@ -20,7 +20,9 @@ const { clearCookie, setCookie } = require("../utils/helpers/cookies.js");
 
 // Finds nearby warehouse to the clinet and sets cookies for caching the details
 const findNearbyWarehouse = async (req, res, next) => {
-    const coords = req.cookies?.coordinates?.split(',');
+    // Read coords from cookie (same-domain) OR x-coordinates header (cross-origin frontend)
+    const rawCoords = req.cookies?.coordinates || req.headers['x-coordinates'];
+    const coords = rawCoords?.split(',');
     const [longitude, latitude] = coords || [];
     const long = Number(longitude);
     const lat = Number(latitude);
