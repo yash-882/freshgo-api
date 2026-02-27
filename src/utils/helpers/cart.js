@@ -18,7 +18,7 @@ const validateStock = (product, requestedQuantity = 1, nearbyWarehouse) => {
     // out of stock for user's location
     else if(warehouse.quantity === 0){
       throw new CustomError(
-            'BadRequestError', `Out of stock. Try a different location.`, 400);
+            'BadRequestError', `Out of stock for the current location.`, 400);
     }
 
     // not enough stock to add up more quantity

@@ -68,7 +68,7 @@ const addToCart = async (req, res, next) => {
         cart = new CartModel({ user: userID, products: [] });
     }
 
-    // find if product is already exist
+    // find if product already exist
     const itemIndex = cart.products
     .findIndex(item => item.product.toString() === productID);;
     
@@ -151,58 +151,73 @@ const removeFromCart = async (req, res, next) => {
     });
 }
 
-//  /cart/:productId/:operation
+//  /cart/:productID/:operation
 // operation = 'inc' or 'dec'
+
 const updateCartItemQuantity = async (req, res, next) => {
     const { productID, operation } = req.params;
 
-    if (!productID)
+    if (!productID) {
         return next(new CustomError('BadRequestError', 'Product ID is required', 400));
+    }
 
-    // invalid operation
-    if (operation !== 'inc' && operation !== 'dec')
+    if (operation !== 'inc' && operation !== 'dec') {
         return next(new CustomError('BadRequestError', 'Invalid operation!', 400));
+    }
 
-    // product is not found
+    // find product in nearby warehouse
     const product = await ProductModel.findOne({
         _id: productID,
         warehouses: { $elemMatch: { warehouse: req.nearbyWarehouse._id } }
     }).select('warehouses');
 
-    if (!product)
+    if (!product) {
         return next(new CustomError('NotFoundError', 'Product not found!', 404));
-
-    if (operation === 'inc') {
-        validateStock(product, 1, req.nearbyWarehouse)
     }
 
-    // first query: increment/decrement the quantity
+    // get current cart
+    const cart = await CartModel.findOne({
+        user: req.user.id,
+        "products.product": productID
+    });
+
+    if (!cart) {
+        return next(new CustomError('BadRequestError', 'Product missing in cart', 400));
+    }
+
+    const item = cart.products.find(p => p.product.toString() === productID);
+
+    if (!item) {
+        return next(new CustomError('BadRequestError', 'Product missing in cart', 400));
+    }
+
+    const currentQuantity = item.quantity;
+
+    // validate stock BEFORE increment
+    if (operation === 'inc') {
+        const newQuantity = currentQuantity + 1;
+        validateStock(product, newQuantity, req.nearbyWarehouse);
+    }
+
+    // update quantity
     const updatedCart = await CartModel.findOneAndUpdate(
         {
             user: req.user.id,
-            products: {
-                $elemMatch: {
-                    product: productID,
-                }
-            }
+            "products.product": productID
         },
         {
-            $inc: { 'products.$.quantity': operation === 'inc' ? 1 : -1 }
+            $inc: { "products.$.quantity": operation === "inc" ? 1 : -1 }
         },
         { new: true, runValidators: true }
     );
 
-    // product not found in cart or max quantity reached
-    if (!updatedCart && operation === 'inc') {
-        return next(new CustomError('BadRequestError', 'Product missing in cart or max quantity reached', 400));
-    }
-
-    // only run $pull if we decremented
     let finalCart = updatedCart;
-    if (operation === 'dec') {
+
+    // remove item if quantity becomes 0
+    if (operation === "dec") {
         finalCart = await CartModel.findOneAndUpdate(
             { user: req.user.id },
-            { $pull: { products: { quantity: { $lte: 0 } } } }, //remove product if the quanity becomes 0
+            { $pull: { products: { quantity: { $lte: 0 } } } },
             { new: true }
         );
     }
@@ -211,6 +226,6 @@ const updateCartItemQuantity = async (req, res, next) => {
         data: finalCart,
         message: finalCart.products.length === 0 ? 'Cart is empty' : undefined,
     });
-}
+};
 
 module.exports = { getCart, addToCart, clearCart, removeFromCart, updateCartItemQuantity }

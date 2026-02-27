@@ -710,11 +710,11 @@ const googleAuthCallback = (req, res, next) => {
     
     user.password = undefined; //remove password before responding
 
-    // sucessful logged in via google account
-        sendApiResponse(res, 200, {
-            message: 'Logged in successfully',
-            data: user,
-        })
+    // Redirect to the frontend OAuth callback page
+    // Cookies (AT, RT) are already set above — the frontend will call /my-profile
+    // to pick up the session.
+    const FRONTEND_URL = process.env.FRONTEND_URL;
+    return res.redirect(`${FRONTEND_URL}/oauth-callback`);
 
      })(req, res, next)
 }

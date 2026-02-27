@@ -20,7 +20,7 @@ const searchProducts = async (req, res, next) => {
   // search products based on the query
   const searchedProducts = await getProductsAgg({
     filter: {...filter, $text: { $search: value, $caseSensitive: false }},
-    sort: sort,
+    sort: {...sort, _id: 1},
     select: select,
     skip: skip,
     limit: limit,
@@ -46,7 +46,7 @@ const getProducts = async (req, res, next) => {
 
   const products = await getProductsAgg({
     filter: filter,
-    sort: sort,
+    sort: { ...sort, _id: 1 },
     select: select,
     skip: skip,
     limit: limit,
