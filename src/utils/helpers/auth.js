@@ -26,7 +26,7 @@ const bcryptCompare = async ({plain, hashed}, errMessage = 'Incorrect!') => {
     const isCorrect = await bcrypt.compare(plain + "", hashed);
 
     if(!isCorrect) {
-        throw new CustomError('UnauthorizedError', errMessage, 401);
+        throw new CustomError('UnauthorizedError', errMessage, 400);
     }
 
     return true;
@@ -54,7 +54,7 @@ const verifyOTP = async (OTPKey, enteredOTP) => {
 
     // if user not found
     if(!jsonUser){
-        throw new CustomError('UnauthorizedError', 'OTP or session has expired!', 401)
+        throw new CustomError('UnauthorizedError', 'OTP or session has expired!', 410)
     } 
 
     // user (JS object)

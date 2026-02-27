@@ -27,6 +27,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./configs/swagger');
+const morgan = require('morgan');
 
 // configs
 const setCors = require('./configs/cors.js');
@@ -36,6 +37,9 @@ app.use(helmet())
 
 // allow requests from the specified client origin and include credentials (like cookies) 
 app.use(setCors())
+
+//log requests 
+app.use(morgan('combined'))
 
 // parses query strings ("?price[gt]=20&sort=-price" -> {price: {gt: "20"}, sort="-price"})
 app.set("query parser", query => qs.parse(query))
@@ -56,7 +60,7 @@ app.use(express.urlencoded({ extended: true })) // parse Form data
 // rate limiter
 app.use(rateLimit({
     windowMs: 1000 * 60, // 1 minute
-    max: 40, // limit each IP to 40 requests per windowMs
+    max: 100, // limit each IP to 40 requests per windowMs
     handler: (req, res, next) =>
         next(new CustomError(
             'TooManyRequestsError',

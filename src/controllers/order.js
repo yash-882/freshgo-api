@@ -12,6 +12,7 @@ const { updateProductsOnCancellation, updateProductsOnDelivery } = require("../u
 const razorpay = require("../configs/razorpay.js");
 const crypto = require("crypto");
 const { getRemainingDeliveryTime, reserveStock } = require("../utils/helpers/order.js");
+const { ready_for_pickup } = require("../constants/orderNextStatuses.js");
 
 
 // create new order (currently supports only cash_on_delivery)
@@ -250,6 +251,8 @@ const razorpayVerify = async (req, res, next) => {
 const getOrders = async (req, res, next) => {
     const user = req.user;
     const {filter, sort, limit, skip, select} = req.sanitizedQuery;
+    console.log('query for get orders', req.sanitizedQuery);
+    
     
     // get recent orders
     const orders = await OrderModel.find({...filter, user: user._id }).populate({
@@ -263,18 +266,25 @@ const getOrders = async (req, res, next) => {
     .select(select);
 
     
-    // sort orders by status (out_for_delivery > placed > pending > cancelled)
+    // sort orders by status (reached_destination -> out_for_delivery >ready_for_pickup > processing > placed > pending > cancelled)
     const statusOrder = {
+        reached_destination: 0,
         out_for_delivery: 1,
-        placed: 2,
-        pending: 3,
-        delivered: 4,
-        cancelled: 5
+        ready_for_pickup: 2,
+        processing: 3,
+        placed: 4,
+        pending: 5,
+        delivered: 6,
+        cancelled: 7
     };
+    console.log('order statuses', orders.map(o => o.orderStatus))
 
     const sortedOrders = orders.length > 0 ? orders
     .sort((a, b) => statusOrder[a.orderStatus] - statusOrder[b.orderStatus])
     : [];
+
+    console.log('order statuses after sorting', sortedOrders.map(o => o.orderStatus))
+
 
     sendApiResponse(res, 200, {
         data: sortedOrders
