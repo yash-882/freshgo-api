@@ -47,10 +47,7 @@ const updateOrderStatus = async (job) => {
         
         if(order.orderStatus === 'reached_destination'){
             // schedule auto-cancellation after 2 minute of reaching destination
-            await orderCancellationQueue.add('cancelOrder', {
-                ...job.data,
-                orderStatus: 'cancelled',
-            }, {
+            await orderCancellationQueue.add('cancelOrder', job.data, {
                 removeOnComplete: true, // remove the job after successful exeuction
                 delay: 1000 * 60 * 10, // 10 minutes
                 attempts: 5, // retry attempts if the job fails
@@ -59,7 +56,7 @@ const updateOrderStatus = async (job) => {
         }
         
         // skip scheduling a new job on these order states
-        const skipStatuses = ['pending', 'delivered', 'cancelled', 'reached_destination']
+        const skipStatuses = ['pending', 'delivered', 'cancelled']
         if(skipStatuses.includes(order.orderStatus)) return;
 
         // get remaining delivery time (returns milliseconds)

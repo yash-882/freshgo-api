@@ -9,7 +9,7 @@ const {
 } = require('../controllers/product.js');
 const { handleQuery } = require('../middlewares/query.js');
 const checkCachedData = require('../middlewares/cache.js');
-const { authorizeUser } = require('../middlewares/auths.js')
+const { authenticate } = require('../middlewares/auths.js')
 const typoCorrection = require('../middlewares/ai/typoCorrection.js');
 const { schemaRegistery } = require('../constants/schemaRegistery.js');
 const findNearbyWarehouse = require('../middlewares/findNearbyWarehouse.js');
@@ -49,7 +49,7 @@ productRouter.post('/image-search',
 
 // products top 20 recommendations based on order history 
 productRouter.get('/recommendations', 
-    authorizeUser,
+    authenticate,
     handleQuery(schemaRegistery.product), 
     productsRecommendations
 )    

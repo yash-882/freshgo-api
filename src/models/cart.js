@@ -22,6 +22,12 @@ const CartSchema = new Schema({
             }
         }
     ],
+
+    // for preventing race conditions
+    isProcessing: {
+        type: Boolean,
+        default: false
+    },
     
     // cart owner
     user: {

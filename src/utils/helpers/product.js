@@ -23,7 +23,7 @@ const updateProductsOnDelivery = async products => {
 };
 
 // updates cancelled products
-const updateProductsOnCancellation = async (products, nearbyWarehouse) => {
+const updateProductsOnCancellation = async (products, nearbyWarehouse, {session} = {}) => {
     const operations = products.map(item => ({
         updateOne: {
             filter: { 
@@ -44,7 +44,7 @@ const updateProductsOnCancellation = async (products, nearbyWarehouse) => {
     }));
 
     // run updation...
-    await ProductModel.bulkWrite(operations);
+    await ProductModel.bulkWrite(operations, {session});
 }
 
 // creates data for single or multiple products

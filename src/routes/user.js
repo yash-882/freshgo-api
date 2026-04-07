@@ -6,7 +6,7 @@ const {
     getMyProfile, 
     updateAddressByID, 
     updateMyProfile } = require('../controllers/user.js');
-const { authorizeUser, roleBasedAccess } = require('../middlewares/auths.js');
+const { authenticate, roleBasedAccess } = require('../middlewares/auths.js');
 const { 
     revenueComparison, 
     revenueStats, 
@@ -14,7 +14,7 @@ const {
 
 // any authenticated user with any role(admin, user, warehouse_manager) can access these routes
 
-userRouter.use(authorizeUser)
+userRouter.use(authenticate)
 
 
 userRouter.route('/')

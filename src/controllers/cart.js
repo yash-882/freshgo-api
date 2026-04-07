@@ -160,22 +160,11 @@ const updateCartItemQuantity = async (req, res, next) => {
     if (!productID) {
         return next(new CustomError('BadRequestError', 'Product ID is required', 400));
     }
-
     if (operation !== 'inc' && operation !== 'dec') {
         return next(new CustomError('BadRequestError', 'Invalid operation!', 400));
     }
 
-    // find product in nearby warehouse
-    const product = await ProductModel.findOne({
-        _id: productID,
-        warehouses: { $elemMatch: { warehouse: req.nearbyWarehouse._id } }
-    }).select('warehouses');
-
-    if (!product) {
-        return next(new CustomError('NotFoundError', 'Product not found!', 404));
-    }
-
-    // get current cart
+    // Single cart fetch — filter ensures item exists
     const cart = await CartModel.findOne({
         user: req.user.id,
         "products.product": productID
@@ -186,46 +175,47 @@ const updateCartItemQuantity = async (req, res, next) => {
     }
 
     const item = cart.products.find(p => p.product.toString() === productID);
-
-    if (!item) {
-        return next(new CustomError('BadRequestError', 'Product missing in cart', 400));
-    }
-
+    // item is guaranteed to exist here because of the query filter above,
+    // but being explicit doesn't hurt in case of edge cases
     const currentQuantity = item.quantity;
 
-    // validate stock BEFORE increment
-    if (operation === 'inc') {
-        const newQuantity = currentQuantity + 1;
-        validateStock(product, newQuantity, req.nearbyWarehouse);
+    // If decrementing to 0, pull the item out entirely — single update
+    if (operation === 'dec' && currentQuantity <= 1) {
+        const updatedCart = await CartModel.findOneAndUpdate(
+            { user: req.user.id },
+            { $pull: { products: { product: productID } } },
+            { new: true }
+        );
+        return sendApiResponse(res, 200, {
+            data: updatedCart,
+            message: updatedCart.products.length === 0 ? 'Cart is empty' : undefined,
+        });
     }
 
-    // update quantity
+    // For inc: validate stock before touching the DB
+    if (operation === 'inc') {
+        const product = await ProductModel.findOne({
+            _id: productID,
+            warehouses: { $elemMatch: { warehouse: req.nearbyWarehouse._id } }
+        }).select('warehouses');
+
+        if (!product) {
+            return next(new CustomError('NotFoundError', 'Product not found!', 404));
+        }
+
+        validateStock(product, currentQuantity + 1, req.nearbyWarehouse);
+    }
+
+    // Single $inc — no follow-up $pull needed
     const updatedCart = await CartModel.findOneAndUpdate(
-        {
-            user: req.user.id,
-            "products.product": productID
-        },
-        {
-            $inc: { "products.$.quantity": operation === "inc" ? 1 : -1 }
-        },
+        { user: req.user.id, "products.product": productID },
+        { $inc: { "products.$.quantity": operation === 'inc' ? 1 : -1 } },
         { new: true, runValidators: true }
     );
 
-    let finalCart = updatedCart;
-
-    // remove item if quantity becomes 0
-    if (operation === "dec") {
-        finalCart = await CartModel.findOneAndUpdate(
-            { user: req.user.id },
-            { $pull: { products: { quantity: { $lte: 0 } } } },
-            { new: true }
-        );
-    }
-
     sendApiResponse(res, 200, {
-        data: finalCart,
-        message: finalCart.products.length === 0 ? 'Cart is empty' : undefined,
+        data: updatedCart,
+        message: updatedCart.products.length === 0 ? 'Cart is empty' : undefined,
     });
 };
-
 module.exports = { getCart, addToCart, clearCart, removeFromCart, updateCartItemQuantity }

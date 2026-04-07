@@ -18,7 +18,7 @@ const {authRequiredFields} = require('../constants/authRequiredFields.js');
 
 // middlewares
 const { 
-    authorizeUser, 
+    authenticate, 
     checkRequiredFields, 
     verifyPassword } = require('../middlewares/auths.js');
 const passport = require('passport');
@@ -46,7 +46,7 @@ authRouter.route('/reset-password/submit')
 
 // middleware to authorize user and allow access to protected routes
 // additionally, it avoids login/signup requests if user is already logged in
-authRouter.use(authorizeUser)
+authRouter.use(authenticate)
 
 
 // validates user fields for sign-up and sends OTP for further verification 

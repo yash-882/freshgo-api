@@ -472,15 +472,6 @@ const submitNewPassword = async (req, res, next) => {
     //query DB for user, throws error if not found
     const user = await findUserByQuery({email}, true, 'Account may have been deleted')
 
-
-    // if new password is same as the current password
-    const isNewPasswordSame = await bcrypt.compare(newPassword, user.password);
-    
-    if(isNewPasswordSame) {
-        return next(
-    new CustomError('BadRequestError', 'Password must be different from the previous one', 400));
-    }
-
     // assign new password
     user.password = newPassword 
     

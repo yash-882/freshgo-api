@@ -7,7 +7,7 @@ const { hash } = require('bcrypt');
 module.exports = new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: `https://freshgo.onrender.com/api/auth/google/callback`,
+    callbackURL: process.env.GOOGLE_OAUTH_CALLBACK_URL,
     passReqToCallback: true,
 
 }, 

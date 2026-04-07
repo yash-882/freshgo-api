@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { authorizeUser, roleBasedAccess } = require('../../middlewares/auths.js');
+const { authenticate, roleBasedAccess } = require('../../middlewares/auths.js');
 const { schemaRegistery } = require('../../constants/schemaRegistery.js');
 const {
     addProductsToMyWarehouse,
@@ -14,7 +14,7 @@ const productRouterManager = Router();
 
 // Apply authentication and warehouse_manager role 
 productRouterManager.use(
-    authorizeUser, 
+    authenticate, 
     roleBasedAccess('warehouse_manager'),
     checkManagedWarehouse
 );

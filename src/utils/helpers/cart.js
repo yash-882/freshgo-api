@@ -16,20 +16,20 @@ const validateStock = (product, requestedQuantity = 1, nearbyWarehouse) => {
     }
 
     // out of stock for user's location
-    else if(warehouse.quantity === 0){
+    else if(warehouse.quantity <= 0){
       throw new CustomError(
-            'BadRequestError', `Out of stock for the current location.`, 400);
+            'BadRequestError', `Currently out of stock`, 400);
     }
 
     // not enough stock to add up more quantity
     else if (warehouse.quantity < requestedQuantity)
         throw new CustomError(
-            'BadRequestError', `Cannot add more than ${warehouse.quantity} units of this item.`, 400);
+            'BadRequestError', `Cannot add more than units of this item.`, 400);
 }
 
 // get user cart with added products
 // run pipeline to get sorted products by quantity (in descending order)
-const populateCart = async (user, nearbyWarehouse) => {
+const populateCart = async (user, nearbyWarehouse, {session} = {}) => {
 
     const cart = await CartModel.findOne({user: user._id});
     if(!cart) return null;
@@ -91,15 +91,16 @@ const populateCart = async (user, nearbyWarehouse) => {
       'productDetails.description': 0,
       'productDetails.warehouses': 0,
       'productDetails.score': 0,
-      'productDetails.createdAt': 0,
       'productDetails.updatedAt': 0,
       'productDetails.__v': 0,
       __v: 0,
+      _id: 0,
+      createdAt:0,
       user:0,
       products:0
     }
   }
-]);
+], {session});
 
     return {
         products: cartProducts

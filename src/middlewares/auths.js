@@ -69,7 +69,7 @@ const checkRequiredFields = (requiredFields = []) => {
 
 // middleware to authorize user and allow access to protected routes
 //additionally, it avoids login/signup requests if user is already logged in
-const authorizeUser = async (req, res, next) => {
+const authenticate = async (req, res, next) => {
 
     // get access and refresh tokens from cookies
     const { AT: accessToken, RT: refreshToken } = req.cookies;
@@ -161,5 +161,5 @@ module.exports = {
     verifyPassword,
     roleBasedAccess,
     checkRequiredFields,
-    authorizeUser
+    authenticate
 }

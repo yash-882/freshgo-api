@@ -14,9 +14,10 @@ const autoCancelOrder = async (job={}) => {
     try {
         const order = await OrderModel.findById(job.data?.orderID)
 
-        // auto-cancel only if order is still in 'pending' state
+        // auto-cancel only if order is still in 'reached_destination' state (not confirmed delivered by user)
         if(order && order.orderStatus === 'reached_destination'){
             order.orderStatus = 'cancelled';
+            order.paymentStatus = 'refunded';
             await order.save();
             console.log('Auto-cancelled order: ', job.data?.orderID);
 
